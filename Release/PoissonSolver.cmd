@@ -1,0 +1,1 @@
+PoissonSolver.exe > Result.txt
