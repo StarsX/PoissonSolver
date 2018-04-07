@@ -1,4 +1,3 @@
-
 #include "ConjGradCH.hlsli"
 
 Texture3D<float>	p_RO;
@@ -10,7 +9,7 @@ RWTexture3D<float>	x;
 RWBuffer<float>		r;
 RWBuffer<float>		rr;
 
-[numthreads(1, 1, 1)]
+[numthreads(THREAD_GROUP_SIZE, THREAD_GROUP_SIZE, THREAD_GROUP_SIZE)]
 void update_x(uint3 DTid : SV_DispatchThreadID)
 {
 	const uint i = GETIDX(DTid);
@@ -30,7 +29,7 @@ Buffer<float>		Acc_rr_new;
 
 RWTexture3D<float>	p;
 
-[numthreads(1, 1, 1)]
+[numthreads(THREAD_GROUP_SIZE, THREAD_GROUP_SIZE, THREAD_GROUP_SIZE)]
 void update_p(uint3 DTid : SV_DispatchThreadID)
 {
 	const uint i = GETIDX(DTid);

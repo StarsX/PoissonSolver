@@ -10,7 +10,7 @@ HRESULT CreateTypedBuffer(ID3D11Device* pDevice, UINT uElementSize, UINT uCount,
 {
 	*ppBufOut = nullptr;
 
-	D3D11_BUFFER_DESC desc = CD3D11_BUFFER_DESC(uElementSize * uCount, D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE);
+	const auto desc = CD3D11_BUFFER_DESC(uElementSize * uCount, D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE);
 
 	if (pInitData)
 	{
@@ -78,7 +78,7 @@ HRESULT CreateTexture3D(ID3D11Device* pDevice, DXGI_FORMAT eFormat, XMUINT3 vSiz
 {
 	*ppTexOut = nullptr;
 
-	D3D11_TEXTURE3D_DESC desc = CD3D11_TEXTURE3D_DESC(eFormat, vSize.x, vSize.y, vSize.z, 1u);
+	auto desc = CD3D11_TEXTURE3D_DESC(eFormat, vSize.x, vSize.y, vSize.z, 1);
 	desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
 
 	if (pInitData)
@@ -126,7 +126,7 @@ HRESULT CreateBufferSRV(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, ID3D11Shad
 	else if (eFormat != DXGI_FORMAT_UNKNOWN)
 	{
 		desc.Format = eFormat;
-		desc.BufferEx.NumElements = descBuf.ByteWidth / 4u;
+		desc.BufferEx.NumElements = descBuf.ByteWidth / 4;
 	}
 	else return E_INVALIDARG;
 
@@ -140,7 +140,7 @@ _Use_decl_annotations_
 HRESULT CreateTexture3DSRV(ID3D11Device* pDevice, ID3D11Texture3D* pTex, ID3D11ShaderResourceView** ppSRVOut)
 {
 	// Setup the description of the shader resource view.
-	D3D11_SHADER_RESOURCE_VIEW_DESC desc = CD3D11_SHADER_RESOURCE_VIEW_DESC(pTex);
+	const auto desc = CD3D11_SHADER_RESOURCE_VIEW_DESC(pTex);
 	// Create the shader resource view.
 	return pDevice->CreateShaderResourceView(pTex, &desc, ppSRVOut);
 }
@@ -178,7 +178,7 @@ HRESULT CreateBufferUAV(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, ID3D11Unor
 	else if (eFormat != DXGI_FORMAT_UNKNOWN)
 	{
 		desc.Format = eFormat;
-		desc.Buffer.NumElements = descBuf.ByteWidth / 4u;
+		desc.Buffer.NumElements = descBuf.ByteWidth / 4;
 	}
 	else return E_INVALIDARG;
 
@@ -192,7 +192,7 @@ _Use_decl_annotations_
 HRESULT CreateTexture3DUAV(ID3D11Device* pDevice, ID3D11Texture3D* pTex, ID3D11UnorderedAccessView** ppUAVOut)
 {
 	// Setup the description of the shader resource view.
-	const D3D11_UNORDERED_ACCESS_VIEW_DESC desc = CD3D11_UNORDERED_ACCESS_VIEW_DESC(pTex);
+	const auto desc = CD3D11_UNORDERED_ACCESS_VIEW_DESC(pTex);
 	// Create the shader resource view.
 	return pDevice->CreateUnorderedAccessView(pTex, &desc, ppUAVOut);
 }

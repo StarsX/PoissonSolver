@@ -1,4 +1,5 @@
 #include "Jacobi.h"
+#include "SharedConst.h"
 
 #ifndef V_RETURN
 #define V_RETURN(x)	{ hr = x; if (FAILED(hr)) return hr; }
@@ -11,7 +12,7 @@ ID3D11ShaderResourceView	*const	g_pNullSRV = nullptr;	// Helper to Clear SRVs
 ID3D11UnorderedAccessView	*const	g_pNullUAV = nullptr;	// Helper to Clear UAVs
 
 Jacobi::Jacobi(ID3D11DeviceContext *const pDeviceContext)
-	: m_pd3dContext(pDeviceContext), m_uRefCount(1u)
+	: m_pd3dContext(pDeviceContext), m_uRefCount(1)
 {
 	m_pd3dContext->AddRef();
 	m_pd3dContext->GetDevice(&m_pd3dDevice);
@@ -26,7 +27,7 @@ Jacobi::~Jacobi()
 
 HRESULT Jacobi::CreateSolver(ID3D11DeviceContext *const pDeviceContext, Jacobi **ppSolver)
 {
-	Jacobi *&pSolver = *ppSolver;
+	auto &pSolver = *ppSolver;
 	pSolver = new Jacobi(pDeviceContext);
 	return pSolver->Init();
 }
@@ -45,7 +46,7 @@ HRESULT Jacobi::Init()
 
 	if (SUCCEEDED(hr)) {
 		ID3D11ShaderReflection *pReflector = nullptr;
-		HRESULT h = D3DReflect(
+		auto h = D3DReflect(
 			shaderBuffer->GetBufferPointer(),
 			shaderBuffer->GetBufferSize(),
 			IID_ID3D11ShaderReflection,
@@ -74,13 +75,13 @@ HRESULT Jacobi::Init()
 
 void Jacobi::Solve(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, ID3D11UnorderedAccessView *const pDst, uint32_t iNumIt)
 {
-	const uint32_t UAVInitialCounts = 0u;
+	const auto UAVInitialCounts = 0u;
 
 	// Setup
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot, 1, &pSrc);
 
 	// Jacobi iterations
-	for (uint32_t i = 0u; i < iNumIt; ++i) jacobi(vSize, pDst);
+	for (auto i = 0u; i < iNumIt; ++i) jacobi(vSize, pDst);
 
 	// Unset
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot, 1, &g_pNullUAV, &UAVInitialCounts);
@@ -94,18 +95,17 @@ void Jacobi::AddRef()
 
 void Jacobi::Release()
 {
-	--m_uRefCount;
-	if (m_uRefCount < 1u) delete this;
+	if (--m_uRefCount < 1) delete this;
 }
 
 void Jacobi::jacobi(const XMUINT3 &vSize, ID3D11UnorderedAccessView *const pDst)
 {
-	const uint32_t UAVInitialCounts = 0u;
+	const auto UAVInitialCounts = 0u;
 
 	// Setup
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot, 1, &pDst, &UAVInitialCounts);
 
 	// Jacobi iteration
 	m_pd3dContext->CSSetShader(m_pShader, nullptr, 0);
-	m_pd3dContext->Dispatch(vSize.x, vSize.y, vSize.z);
+	m_pd3dContext->Dispatch(vSize.x / THREAD_GROUP_SIZE, vSize.y / THREAD_GROUP_SIZE, vSize.z / THREAD_GROUP_SIZE);
 }

@@ -1,11 +1,10 @@
-
 #include "AxCS.hlsli"
 #include "ConjGradCH.hlsli"
 
 RWBuffer<float>		Ap;
 RWBuffer<float>		pAp;
 
-[numthreads(1, 1, 1)]
+[numthreads(THREAD_GROUP_SIZE, THREAD_GROUP_SIZE, THREAD_GROUP_SIZE)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
 	float p;

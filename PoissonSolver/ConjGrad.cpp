@@ -1,4 +1,5 @@
 #include "ConjGrad.h"
+#include "SharedConst.h"
 
 #ifndef V_RETURN
 #define V_RETURN(x)	{ hr = x; if (FAILED(hr)) return hr; }
@@ -12,7 +13,7 @@ ID3D11UnorderedAccessView	*const	g_pNullUAV = nullptr;	// Helper to Clear UAVs
 ID3D11Buffer				*const	g_pNullBuffer = nullptr;
 
 ConjGrad::ConjGrad(ID3D11DeviceContext *pDeviceContext)
-	: m_pd3dContext(pDeviceContext), m_uRefCount(1u)
+	: m_pd3dContext(pDeviceContext), m_uRefCount(1)
 {
 	m_pd3dContext->AddRef();
 	m_pd3dContext->GetDevice(&m_pd3dDevice);
@@ -65,7 +66,7 @@ HRESULT ConjGrad::CreateSolver(ID3D11DeviceContext *const pDeviceContext,
 	DXGI_FORMAT eFormat, const XMUINT3 &vSize, ConjGrad **ppSolver,
 	ID3D11ComputeShader *const pInitShader, ID3D11ComputeShader *const pApShader)
 {
-	ConjGrad *&pSolver = *ppSolver;
+	auto &pSolver = *ppSolver;
 	pSolver = new ConjGrad(pDeviceContext);
 	return pSolver->Init(eFormat, vSize, pInitShader, pApShader);
 }
@@ -80,7 +81,7 @@ HRESULT ConjGrad::Init(DXGI_FORMAT eFormat, const XMUINT3 &vSize,
 	V_RETURN(initBuffers(eFormat, vSize));
 	V_RETURN(createConstBuffer(vSize));
 
-	V_RETURN(D3DX11CreateScan(m_pd3dContext, vSize.x * vSize.y * vSize.z + 1u, 1u, &m_pScan));
+	V_RETURN(D3DX11CreateScan(m_pd3dContext, vSize.x * vSize.y * vSize.z + 1, 1, &m_pScan));
 	V_RETURN(m_pScan->SetScanDirection(D3DX11_SCAN_DIRECTION_FORWARD));
 
 	return hr;
@@ -90,8 +91,8 @@ HRESULT ConjGrad::initBuffers(DXGI_FORMAT eFormat, const XMUINT3 &vSize)
 {
 	HRESULT hr;
 
-	const uint32_t uSize = vSize.x * vSize.y * vSize.z;
-	const uint32_t uScanSize = uSize + 1u;
+	const auto uSize = vSize.x * vSize.y * vSize.z;
+	const auto uScanSize = uSize + 1;
 
 	// r related
 	V_RETURN(CreateTypedBuffer(m_pd3dDevice, m_uElementSize, uScanSize, nullptr, &m_prr[0]));
@@ -319,8 +320,8 @@ HRESULT ConjGrad::createConstBuffer(const XMUINT3 &vSize)
 
 void ConjGrad::Solve(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, ID3D11UnorderedAccessView *const pDst, uint32_t iNumIt)
 {
-	const uint32_t UAVInitialCounts = 0u;
-	const uint32_t uScanSize = vSize.x * vSize.y * vSize.z + 1u;
+	const auto UAVInitialCounts = 0u;
+	const auto uScanSize = vSize.x * vSize.y * vSize.z + 1;
 	
 	// Initial solution
 	init(vSize, pSrc, pDst);
@@ -328,7 +329,7 @@ void ConjGrad::Solve(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc,
 	m_pd3dContext->CSSetUnorderedAccessViews(0, 1, &g_pNullUAV, &UAVInitialCounts);
 
 	// Iteration
-	for (uint32_t i = 0u; i < iNumIt; ++i) {
+	for (auto i = 0u; i < iNumIt; ++i) {
 		compute_pAp(vSize);
 		m_pScan->Scan(m_eScanDataType, D3DX11_SCAN_OPCODE_ADD, uScanSize, m_pUAVpAp, m_pUAVpAp);
 		m_pd3dContext->CSSetUnorderedAccessViews(0, 1, &g_pNullUAV, &UAVInitialCounts);
@@ -349,38 +350,37 @@ void ConjGrad::AddRef()
 
 void ConjGrad::Release()
 {
-	--m_uRefCount;
-	if (m_uRefCount < 1u) delete this;
+	if (--m_uRefCount < 1) delete this;
 }
 
 void ConjGrad::init(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, ID3D11UnorderedAccessView *const pDst)
 {
-	const uint32_t UAVInitialCounts = 0u;
+	const auto UAVInitialCounts = 0u;
 
 	// Setup
 	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_init, 1, &m_pCBDim);
-	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_b, 1u, &pSrc);
-	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_x0, 1u, &pDst, &UAVInitialCounts);
-	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_r0, 1u, &m_pUAVr, &UAVInitialCounts);
-	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_rr0, 1u, &m_pUAVrr0, &UAVInitialCounts);
-	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_p0, 1u, &m_pUAVp, &UAVInitialCounts);
+	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_b, 1, &pSrc);
+	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_x0, 1, &pDst, &UAVInitialCounts);
+	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_r0, 1, &m_pUAVr, &UAVInitialCounts);
+	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_rr0, 1, &m_pUAVrr0, &UAVInitialCounts);
+	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_p0, 1, &m_pUAVp, &UAVInitialCounts);
 
 	// initial solution
 	m_pd3dContext->CSSetShader(m_pInitShader, nullptr, 0);
 	m_pd3dContext->Dispatch(vSize.x, vSize.y, vSize.z);
 
 	// Unset
-	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_p0, 1u, &g_pNullUAV, &UAVInitialCounts);
-	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_rr0, 1u, &g_pNullUAV, &UAVInitialCounts);
-	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_r0, 1u, &g_pNullUAV, &UAVInitialCounts);
-	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_x0, 1u, &g_pNullUAV, &UAVInitialCounts);
-	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_b, 1u, &g_pNullSRV);
+	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_p0, 1, &g_pNullUAV, &UAVInitialCounts);
+	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_rr0, 1, &g_pNullUAV, &UAVInitialCounts);
+	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_r0, 1, &g_pNullUAV, &UAVInitialCounts);
+	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_x0, 1, &g_pNullUAV, &UAVInitialCounts);
+	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_b, 1, &g_pNullSRV);
 	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_init, 1, &g_pNullBuffer);
 }
 
 void ConjGrad::update_x(const XMUINT3 &vSize, ID3D11UnorderedAccessView *const pDst)
 {
-	const uint32_t UAVInitialCounts = 0u;
+	const auto UAVInitialCounts = 0u;
 
 	// Setup
 	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_x, 1, &m_pCBDim);
@@ -394,7 +394,7 @@ void ConjGrad::update_x(const XMUINT3 &vSize, ID3D11UnorderedAccessView *const p
 
 	// update solution
 	m_pd3dContext->CSSetShader(m_pShader, nullptr, 0);
-	m_pd3dContext->Dispatch(vSize.x, vSize.y, vSize.z);
+	m_pd3dContext->Dispatch(vSize.x / THREAD_GROUP_SIZE, vSize.y / THREAD_GROUP_SIZE, vSize.z / THREAD_GROUP_SIZE);
 
 	// Unset
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_rr, 1, &g_pNullUAV, &UAVInitialCounts);
@@ -409,7 +409,7 @@ void ConjGrad::update_x(const XMUINT3 &vSize, ID3D11UnorderedAccessView *const p
 
 void ConjGrad::update_p(const XMUINT3 &vSize)
 {
-	const uint32_t UAVInitialCounts = 0u;
+	const auto UAVInitialCounts = 0u;
 
 	// Setup
 	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_p, 1, &m_pCBDim);
@@ -420,7 +420,7 @@ void ConjGrad::update_p(const XMUINT3 &vSize)
 
 	// update solution
 	m_pd3dContext->CSSetShader(m_pUpdateShader, nullptr, 0);
-	m_pd3dContext->Dispatch(vSize.x, vSize.y, vSize.z);
+	m_pd3dContext->Dispatch(vSize.x / THREAD_GROUP_SIZE, vSize.y / THREAD_GROUP_SIZE, vSize.z / THREAD_GROUP_SIZE);
 
 	// Unset
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_p, 1, &g_pNullUAV, &UAVInitialCounts);
@@ -432,7 +432,7 @@ void ConjGrad::update_p(const XMUINT3 &vSize)
 
 void ConjGrad::compute_pAp(const XMUINT3 &vSize)
 {
-	const uint32_t UAVInitialCounts = 0u;
+	const auto UAVInitialCounts = 0u;
 
 	// Setup
 	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_pAp, 1, &m_pCBDim);
@@ -442,7 +442,7 @@ void ConjGrad::compute_pAp(const XMUINT3 &vSize)
 
 	// update solution
 	m_pd3dContext->CSSetShader(m_pApShader, nullptr, 0);
-	m_pd3dContext->Dispatch(vSize.x, vSize.y, vSize.z);
+	m_pd3dContext->Dispatch(vSize.x / THREAD_GROUP_SIZE, vSize.y / THREAD_GROUP_SIZE, vSize.z / THREAD_GROUP_SIZE);
 
 	// Unset
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_pAp, 1, &g_pNullUAV, &UAVInitialCounts);

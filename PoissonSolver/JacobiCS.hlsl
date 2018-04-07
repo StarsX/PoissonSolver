@@ -1,3 +1,4 @@
+#include "SharedConst.h"
 
 Texture3D<float>	b;
 RWTexture3D<float>	x;
@@ -18,7 +19,7 @@ float jacobi(half2 vf, int3 vTex)
 	return q / vf.y;
 }
 
-[numthreads(1, 1, 1)]
+[numthreads(THREAD_GROUP_SIZE, THREAD_GROUP_SIZE, THREAD_GROUP_SIZE)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
 	const half2 vf = { -1.0, 6.0 };

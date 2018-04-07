@@ -1,4 +1,3 @@
-
 #include "AxCS.hlsli"
 #include "ConjGradCH.hlsli"
 

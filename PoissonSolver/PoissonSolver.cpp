@@ -52,6 +52,8 @@ using namespace DirectX;
 #define _Use_decl_annotations_
 #endif
 
+#define ITERATIONS	64
+
 //--------------------------------------------------------------------------------------
 // Forward declarations 
 //--------------------------------------------------------------------------------------
@@ -92,7 +94,7 @@ int __cdecl main()
 		return 1;
 	printf("done\n");
 
-	const uint32_t uDim = 8u;
+	const auto uDim = 16u;
 	const XMUINT3 vSize(uDim, uDim, uDim);
 	float *b = new float[vSize.x * vSize.y * vSize.z];
 
@@ -103,9 +105,9 @@ int __cdecl main()
 
 	printf("Creating buffers and filling them with initial data...");
 	// The number of elements in a buffer to be tested
-	for (uint32_t i = 0u; i < vSize.z; ++i) {
-		for (uint32_t j = 0u; j < vSize.y; ++j) {
-			for (uint32_t k = 0u; k < vSize.x; ++k) {
+	for (auto i = 0u; i < vSize.z; ++i) {
+		for (auto j = 0u; j < vSize.y; ++j) {
+			for (auto k = 0u; k < vSize.x; ++k) {
 				b[i * vSize.x * vSize.y + j * vSize.x + k] = (rand() % 256 - 255) / 255.0f;
 			}
 		}
@@ -143,16 +145,18 @@ int __cdecl main()
 	printf("done\n");
 
 	ID3D11Query *pQueryDisjoint, *pQueryStart, *pQueryEnd;
-	D3D11_QUERY_DESC desc = CD3D11_QUERY_DESC(D3D11_QUERY_TIMESTAMP_DISJOINT);
+	auto desc = CD3D11_QUERY_DESC(D3D11_QUERY_TIMESTAMP_DISJOINT);
 	g_pDevice->CreateQuery(&desc, &pQueryDisjoint);
 	desc.Query = D3D11_QUERY_TIMESTAMP;
 	g_pDevice->CreateQuery(&desc, &pQueryStart);
 	g_pDevice->CreateQuery(&desc, &pQueryEnd);
 
 	printf("Solving by Jacobi iteration...");
+	g_pSolverJacobi->Solve(vSize, g_pbSRV, g_pxUAV, 128);
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	g_pSolverJacobi->Solve(vSize, g_pbSRV, g_pxUAV, 128u);
+	for (auto i = 0u; i < ITERATIONS; ++i)
+		g_pSolverJacobi->Solve(vSize, g_pbSRV, g_pxUAV, 128);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 	
@@ -162,12 +166,14 @@ int __cdecl main()
 	while (S_OK != g_pContext->GetData(pQueryEnd, &uEndTime, sizeof(UINT64), 0));
 	while (S_OK != g_pContext->GetData(pQueryDisjoint, &freq, sizeof(D3D11_QUERY_DATA_TIMESTAMP_DISJOINT), 0));
 	double fTimeElapse = (uEndTime - uStartTime) / static_cast<double>(freq.Frequency) * 1000.0;
-	printf("done (%.2fms)\n", fTimeElapse);
+	printf("done (%.2fms)\n", fTimeElapse / double(ITERATIONS));
 	
 	printf("Solving by conjugate gradient...");
+	g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 17);
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 17u);
+	for (auto i = 0u; i < ITERATIONS; ++i)
+		g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 17);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 
@@ -175,7 +181,7 @@ int __cdecl main()
 	while (S_OK != g_pContext->GetData(pQueryEnd, &uEndTime, sizeof(UINT64), 0));
 	while (S_OK != g_pContext->GetData(pQueryDisjoint, &freq, sizeof(D3D11_QUERY_DATA_TIMESTAMP_DISJOINT), 0));
 	fTimeElapse = (uEndTime - uStartTime) / static_cast<double>(freq.Frequency) * 1000.0;
-	printf("done (%.2fms)\n", fTimeElapse);
+	printf("done (%.2fms)\n", fTimeElapse / double(ITERATIONS));
 
 	SAFE_RELEASE(pQueryEnd);
 	SAFE_RELEASE(pQueryStart);
@@ -183,7 +189,7 @@ int __cdecl main()
 
 	// Read back the result from GPU, verify its correctness against result computed by CPU
 	{
-		ID3D11Texture3D* pRead = CreateAndCopyToDebugTex(g_pDevice, g_pContext, g_px);
+		auto pRead = CreateAndCopyToDebugTex(g_pDevice, g_pContext, g_px);
 		D3D11_MAPPED_SUBRESOURCE MappedResource;
 		float *p;
 		g_pContext->Map(pRead, 0, D3D11_MAP_READ, 0, &MappedResource);
@@ -194,10 +200,10 @@ int __cdecl main()
 
 		// Verify that if Compute Shader has done right
 		printf("Print result (by Jacobi iteration)...\n");
-		uint32_t uPitch = max(vSize.x, 32u);
-		for (uint32_t i = 0u; i < vSize.z; ++i) {
-			for (uint32_t j = 0u; j < vSize.y; ++j) {
-				for (uint32_t k = 0u; k < vSize.x; ++k) {
+		auto uPitch = max(vSize.x, 32);
+		for (auto i = 0u; i < vSize.z; ++i) {
+			for (auto j = 0u; j < vSize.y; ++j) {
+				for (auto k = 0u; k < vSize.x; ++k) {
 					printf("%.4f ", p[i * uPitch * vSize.y + j * uPitch + k]);
 				}
 				printf("\n");
@@ -222,10 +228,10 @@ int __cdecl main()
 
 		// Verify that if Compute Shader has done right
 		printf("Print result (by conjugate gradient)...\n");
-		uint32_t uPitch = max(vSize.x, 32u);
-		for (uint32_t i = 0u; i < vSize.z; ++i) {
-			for (uint32_t j = 0u; j < vSize.y; ++j) {
-				for (uint32_t k = 0u; k < vSize.x; ++k) {
+		auto uPitch = max(vSize.x, 32);
+		for (auto i = 0u; i < vSize.z; ++i) {
+			for (auto j = 0u; j < vSize.y; ++j) {
+				for (auto k = 0u; k < vSize.x; ++k) {
 					printf("%.4f ", p[i * uPitch * vSize.y + j * uPitch + k]);
 				}
 				printf("\n");
