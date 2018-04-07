@@ -15,14 +15,14 @@ class Jacobi
 {
 public:
 	Jacobi(ID3D11DeviceContext *const pDeviceContext);
-	~Jacobi();
+	virtual ~Jacobi();
 	HRESULT Init();
 
 	void Solve(const DirectX::XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, ID3D11UnorderedAccessView *const pDst, uint32_t iNumIt);
 	void AddRef();
 	void Release();
 
-	static HRESULT CreateSolver(ID3D11DeviceContext *const pDeviceContext, Jacobi **pSolver);
+	static HRESULT CreateSolver(ID3D11DeviceContext *const pDeviceContext, Jacobi **ppSolver);
 protected:
 	void jacobi(const DirectX::XMUINT3 &vSize, ID3D11UnorderedAccessView *const pDst);
 

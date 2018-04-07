@@ -1,5 +1,5 @@
-#include "AxCS.hlsli"
-#include "ConjGradCH.hlsli"
+#include "CSAx.hlsli"
+#include "CHConjGrad.hlsli"
 
 RWBuffer<float>		Ap;
 RWBuffer<float>		pAp;

@@ -30,6 +30,9 @@
     <ClCompile Include="CreateBuffers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PrefixSum.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Jacobi.h">
@@ -44,32 +47,44 @@
     <ClInclude Include="SharedConst.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PrefixSum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="JacobiCS.hlsl">
+    <FxCompile Include="CSPrefixSum1.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="xUpdateCS.hlsl">
+    <FxCompile Include="CSPrefixSum2.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="pUpdateCS.hlsl">
+    <FxCompile Include="CSInit.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="InitCS.hlsl">
+    <FxCompile Include="CSpAp.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="pApCS.hlsl">
+    <FxCompile Include="CSpUpdate.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CSxUpdate.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CSJacobi.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ConjGradCS.hlsli">
+    <None Include="CSScanBlockBuffer.hlsli">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="AxCS.hlsli">
+    <None Include="CHConjGrad.hlsli">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="ConjGradCH.hlsli">
+    <None Include="CSAx.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="CSConjGrad.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

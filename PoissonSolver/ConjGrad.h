@@ -6,18 +6,18 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
-#include <d3dcsx.h>
+//#include <d3dcsx.h>
 #endif
 
 #include <fstream>
 #include <vector>
-#include "CreateBuffers.h"
+#include "PrefixSum.h"
 
 class ConjGrad
 {
 public:
 	ConjGrad(ID3D11DeviceContext *const pDeviceContext);
-	~ConjGrad();
+	virtual ~ConjGrad();
 	HRESULT Init(DXGI_FORMAT eFormat, const DirectX::XMUINT3 &vSize,
 		ID3D11ComputeShader *const pInitShader = nullptr, ID3D11ComputeShader *const pApShader = nullptr);
 
@@ -26,7 +26,7 @@ public:
 	void Release();
 
 	static HRESULT CreateSolver(ID3D11DeviceContext *const pDeviceContext,
-		DXGI_FORMAT eFormat, const DirectX::XMUINT3 &vSize, ConjGrad **pSolver,
+		DXGI_FORMAT eFormat, const DirectX::XMUINT3 &vSize, ConjGrad **ppSolver,
 		ID3D11ComputeShader *const pInitShader = nullptr, ID3D11ComputeShader *const pApShader = nullptr);
 protected:
 	HRESULT initShaders(ID3D11ComputeShader *const pInitShader, ID3D11ComputeShader *const pApShader);
@@ -99,7 +99,8 @@ protected:
 	ID3D11ComputeShader			*m_pUpdateShader;
 	ID3D11ComputeShader			*m_pApShader;
 
-	ID3DX11Scan					*m_pScan;
+	//ID3DX11Scan					*m_pScan;
+	PrefixSum					*m_pScan;
 
 	ID3D11Device				*m_pd3dDevice;
 	ID3D11DeviceContext			*m_pd3dContext;

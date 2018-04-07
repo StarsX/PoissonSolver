@@ -1,5 +1,5 @@
-#include "AxCS.hlsli"
-#include "ConjGradCH.hlsli"
+#include "CSAx.hlsli"
+#include "CHConjGrad.hlsli"
 
 Texture3D<float>	b;
 
@@ -7,7 +7,7 @@ RWBuffer<float>		r;
 RWBuffer<float>		rr;
 RWTexture3D<float>	p;
 
-[numthreads(1, 1, 1)]
+[numthreads(THREAD_GROUP_SIZE, THREAD_GROUP_SIZE, THREAD_GROUP_SIZE)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
 	float x0;

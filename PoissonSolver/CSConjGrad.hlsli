@@ -1,4 +1,4 @@
-#include "ConjGradCH.hlsli"
+#include "CHConjGrad.hlsli"
 
 Texture3D<float>	p_RO;
 Buffer<float>		Ap;

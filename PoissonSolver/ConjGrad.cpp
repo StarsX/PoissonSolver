@@ -81,8 +81,9 @@ HRESULT ConjGrad::Init(DXGI_FORMAT eFormat, const XMUINT3 &vSize,
 	V_RETURN(initBuffers(eFormat, vSize));
 	V_RETURN(createConstBuffer(vSize));
 
-	V_RETURN(D3DX11CreateScan(m_pd3dContext, vSize.x * vSize.y * vSize.z + 1, 1, &m_pScan));
-	V_RETURN(m_pScan->SetScanDirection(D3DX11_SCAN_DIRECTION_FORWARD));
+	//V_RETURN(D3DX11CreateScan(m_pd3dContext, vSize.x * vSize.y * vSize.z + 1, 1, &m_pScan));
+	//V_RETURN(m_pScan->SetScanDirection(D3DX11_SCAN_DIRECTION_FORWARD));
+	V_RETURN(PrefixSum::CreateScan(m_pd3dContext, vSize.x * vSize.y * vSize.z + 1, &m_pScan));
 
 	return hr;
 }
@@ -135,7 +136,7 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 		m_pInitShader->AddRef();
 	}
 	else {
-		V_RETURN(D3DReadFileToBlob(L"InitCS.cso", &shaderBuffer));
+		V_RETURN(D3DReadFileToBlob(L"CSInit.cso", &shaderBuffer));
 		hr = m_pd3dDevice->CreateComputeShader(
 			shaderBuffer->GetBufferPointer(),
 			shaderBuffer->GetBufferSize(),
@@ -178,7 +179,7 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 	}
 
 	shaderBuffer = nullptr;
-	V_RETURN(D3DReadFileToBlob(L"xUpdateCS.cso", &shaderBuffer));
+	V_RETURN(D3DReadFileToBlob(L"CSxUpdate.cso", &shaderBuffer));
 	hr = m_pd3dDevice->CreateComputeShader(
 		shaderBuffer->GetBufferPointer(),
 		shaderBuffer->GetBufferSize(),
@@ -226,7 +227,7 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 	if (FAILED(hr)) return hr;
 
 	shaderBuffer = nullptr;
-	V_RETURN(D3DReadFileToBlob(L"pUpdateCS.cso", &shaderBuffer));
+	V_RETURN(D3DReadFileToBlob(L"CSpUpdate.cso", &shaderBuffer));
 	hr = m_pd3dDevice->CreateComputeShader(
 		shaderBuffer->GetBufferPointer(),
 		shaderBuffer->GetBufferSize(),
@@ -269,7 +270,7 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 		m_pApShader->AddRef();
 	}
 	else {
-		V_RETURN(D3DReadFileToBlob(L"pApCS.cso", &shaderBuffer));
+		V_RETURN(D3DReadFileToBlob(L"CSpAp.cso", &shaderBuffer));
 		hr = m_pd3dDevice->CreateComputeShader(
 			shaderBuffer->GetBufferPointer(),
 			shaderBuffer->GetBufferSize(),
@@ -325,17 +326,20 @@ void ConjGrad::Solve(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc,
 	
 	// Initial solution
 	init(vSize, pSrc, pDst);
-	m_pScan->Scan(m_eScanDataType, D3DX11_SCAN_OPCODE_ADD, uScanSize, m_pUAVrr0, m_pUAVrr0);
+	//m_pScan->Scan(m_eScanDataType, D3DX11_SCAN_OPCODE_ADD, uScanSize, m_pUAVrr0, m_pUAVrr0);
+	m_pScan->Scan(uScanSize, m_pUAVrr0, m_pUAVrr0);
 	m_pd3dContext->CSSetUnorderedAccessViews(0, 1, &g_pNullUAV, &UAVInitialCounts);
 
 	// Iteration
 	for (auto i = 0u; i < iNumIt; ++i) {
 		compute_pAp(vSize);
-		m_pScan->Scan(m_eScanDataType, D3DX11_SCAN_OPCODE_ADD, uScanSize, m_pUAVpAp, m_pUAVpAp);
+		//m_pScan->Scan(m_eScanDataType, D3DX11_SCAN_OPCODE_ADD, uScanSize, m_pUAVpAp, m_pUAVpAp);
+		m_pScan->Scan(uScanSize, m_pUAVpAp, m_pUAVpAp);
 		m_pd3dContext->CSSetUnorderedAccessViews(0, 1, &g_pNullUAV, &UAVInitialCounts);
 		update_x(vSize, pDst);
 
-		m_pScan->Scan(m_eScanDataType, D3DX11_SCAN_OPCODE_ADD, uScanSize, m_pUAVrr, m_pUAVrr);
+		//m_pScan->Scan(m_eScanDataType, D3DX11_SCAN_OPCODE_ADD, uScanSize, m_pUAVrr, m_pUAVrr);
+		m_pScan->Scan(uScanSize, m_pUAVrr, m_pUAVrr);
 		m_pd3dContext->CSSetUnorderedAccessViews(0, 1, &g_pNullUAV, &UAVInitialCounts);
 		update_p(vSize);
 		
@@ -367,7 +371,7 @@ void ConjGrad::init(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, 
 
 	// initial solution
 	m_pd3dContext->CSSetShader(m_pInitShader, nullptr, 0);
-	m_pd3dContext->Dispatch(vSize.x, vSize.y, vSize.z);
+	m_pd3dContext->Dispatch(vSize.x / THREAD_GROUP_SIZE, vSize.y/ THREAD_GROUP_SIZE, vSize.z / THREAD_GROUP_SIZE);
 
 	// Unset
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_p0, 1, &g_pNullUAV, &UAVInitialCounts);

@@ -24,7 +24,7 @@ using namespace DirectX;
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "d3dcsx.lib")
+//#pragma comment(lib, "d3dcsx.lib")
 
 #if D3D_COMPILER_VERSION < 46
 #include <d3dx11.h>
@@ -51,8 +51,6 @@ using namespace DirectX;
 #ifndef _Use_decl_annotations_
 #define _Use_decl_annotations_
 #endif
-
-#define ITERATIONS	64
 
 //--------------------------------------------------------------------------------------
 // Forward declarations 
@@ -94,7 +92,7 @@ int __cdecl main()
 		return 1;
 	printf("done\n");
 
-	const auto uDim = 16u;
+	const auto uDim = 32u;
 	const XMUINT3 vSize(uDim, uDim, uDim);
 	float *b = new float[vSize.x * vSize.y * vSize.z];
 
@@ -152,11 +150,9 @@ int __cdecl main()
 	g_pDevice->CreateQuery(&desc, &pQueryEnd);
 
 	printf("Solving by Jacobi iteration...");
-	g_pSolverJacobi->Solve(vSize, g_pbSRV, g_pxUAV, 128);
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	for (auto i = 0u; i < ITERATIONS; ++i)
-		g_pSolverJacobi->Solve(vSize, g_pbSRV, g_pxUAV, 128);
+	g_pSolverJacobi->Solve(vSize, g_pbSRV, g_pxUAV, 1920);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 	
@@ -166,14 +162,12 @@ int __cdecl main()
 	while (S_OK != g_pContext->GetData(pQueryEnd, &uEndTime, sizeof(UINT64), 0));
 	while (S_OK != g_pContext->GetData(pQueryDisjoint, &freq, sizeof(D3D11_QUERY_DATA_TIMESTAMP_DISJOINT), 0));
 	double fTimeElapse = (uEndTime - uStartTime) / static_cast<double>(freq.Frequency) * 1000.0;
-	printf("done (%.2fms)\n", fTimeElapse / double(ITERATIONS));
+	printf("done (%.2fms)\n", fTimeElapse);
 	
 	printf("Solving by conjugate gradient...");
-	g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 17);
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	for (auto i = 0u; i < ITERATIONS; ++i)
-		g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 17);
+	g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 120);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 
@@ -181,7 +175,7 @@ int __cdecl main()
 	while (S_OK != g_pContext->GetData(pQueryEnd, &uEndTime, sizeof(UINT64), 0));
 	while (S_OK != g_pContext->GetData(pQueryDisjoint, &freq, sizeof(D3D11_QUERY_DATA_TIMESTAMP_DISJOINT), 0));
 	fTimeElapse = (uEndTime - uStartTime) / static_cast<double>(freq.Frequency) * 1000.0;
-	printf("done (%.2fms)\n", fTimeElapse / double(ITERATIONS));
+	printf("done (%.2fms)\n", fTimeElapse);
 
 	SAFE_RELEASE(pQueryEnd);
 	SAFE_RELEASE(pQueryStart);

@@ -36,7 +36,7 @@ HRESULT Jacobi::Init()
 {
 	HRESULT hr;
 	ID3DBlob *shaderBuffer = nullptr;
-	V_RETURN(D3DReadFileToBlob(L"JacobiCS.cso", &shaderBuffer));
+	V_RETURN(D3DReadFileToBlob(L"CSJacobi.cso", &shaderBuffer));
 
 	hr = m_pd3dDevice->CreateComputeShader(
 		shaderBuffer->GetBufferPointer(),
