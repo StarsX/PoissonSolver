@@ -1,8 +1,12 @@
+//--------------------------------------------------------------------------------------
+// By XU, Tianchen
+//--------------------------------------------------------------------------------------
+
 #include "CSAx.hlsli"
 #include "CHConjGrad.hlsli"
 
-RWBuffer<float>		Ap;
-RWBuffer<float>		pAp;
+RWStructuredBuffer<float>	Ap;
+RWStructuredBuffer<float>	pAp;
 
 [numthreads(THREAD_GROUP_SIZE, THREAD_GROUP_SIZE, THREAD_GROUP_SIZE)]
 void main( uint3 DTid : SV_DispatchThreadID )

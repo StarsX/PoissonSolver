@@ -2,5 +2,5 @@
 // By XU, Tianchen
 //--------------------------------------------------------------------------------------
 
-typedef float	typeless;
+typedef uint	typeless;
 #include "CSPrefixSum2.hlsli"

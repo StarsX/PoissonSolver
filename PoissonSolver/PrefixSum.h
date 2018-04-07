@@ -1,3 +1,7 @@
+//--------------------------------------------------------------------------------------
+// By XU, Tianchen
+//--------------------------------------------------------------------------------------
+
 #pragma once
 
 #ifdef PRECOMPILED_HEADER
@@ -14,12 +18,19 @@
 class PrefixSum
 {
 public:
+	enum SCAN_DATA_TYPE
+	{
+		SCAN_DATA_TYPE_FLOAT = 1,
+		SCAN_DATA_TYPE_INT,
+		SCAN_DATA_TYPE_UINT
+	};
+
 	PrefixSum(ID3D11DeviceContext *const pDeviceContext);
 	virtual ~PrefixSum();
 
 	HRESULT Init(const uint32_t uSize);
 
-	void Scan(const uint32_t uSize, ID3D11UnorderedAccessView *const pSrc, ID3D11UnorderedAccessView *const pDst);
+	void Scan(const SCAN_DATA_TYPE dataType, const uint32_t uSize, ID3D11UnorderedAccessView *const pSrc, ID3D11UnorderedAccessView *const pDst);
 	void AddRef();
 	void Release();
 
@@ -28,8 +39,12 @@ public:
 protected:
 	enum ComputeShaderID : uint32_t
 	{
-		CS_PREFIXSUM1,
-		CS_PREFIXSUM2,
+		CS_PREFIXSUM1_FLOAT,
+		CS_PREFIXSUM2_FLOAT,
+		CS_PREFIXSUM1_INT,
+		CS_PREFIXSUM2_INT,
+		CS_PREFIXSUM1_UINT,
+		CS_PREFIXSUM2_UINT,
 
 		NUM_CS
 	};

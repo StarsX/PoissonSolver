@@ -73,6 +73,18 @@
     <FxCompile Include="CSJacobi.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="CSPrefixSum1i.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CSPrefixSum2i.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CSPrefixSum1u.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CSPrefixSum2u.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="CSScanBlockBuffer.hlsli">
@@ -85,6 +97,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="CSConjGrad.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="CSPrefixSum1.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="CSPrefixSum2.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

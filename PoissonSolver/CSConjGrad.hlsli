@@ -1,13 +1,17 @@
+//--------------------------------------------------------------------------------------
+// By XU, Tianchen
+//--------------------------------------------------------------------------------------
+
 #include "CHConjGrad.hlsli"
 
-Texture3D<float>	p_RO;
-Buffer<float>		Ap;
-Buffer<float>		Acc_rr;
-Buffer<float>		Acc_pAp;
+Texture3D<float>			p_RO;
+StructuredBuffer<float>		Ap;
+StructuredBuffer<float>		Acc_rr;
+StructuredBuffer<float>		Acc_pAp;
 
-RWTexture3D<float>	x;
-RWBuffer<float>		r;
-RWBuffer<float>		rr;
+RWTexture3D<float>			x;
+RWStructuredBuffer<float>	r;
+RWStructuredBuffer<float>	rr;
 
 [numthreads(THREAD_GROUP_SIZE, THREAD_GROUP_SIZE, THREAD_GROUP_SIZE)]
 void update_x(uint3 DTid : SV_DispatchThreadID)
@@ -24,8 +28,8 @@ void update_x(uint3 DTid : SV_DispatchThreadID)
 }
 
 
-Buffer<float>		r_RO;
-Buffer<float>		Acc_rr_new;
+StructuredBuffer<float>		r_RO;
+StructuredBuffer<float>		Acc_rr_new;
 
 RWTexture3D<float>	p;
 

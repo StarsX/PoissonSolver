@@ -1,11 +1,15 @@
+//--------------------------------------------------------------------------------------
+// By XU, Tianchen
+//--------------------------------------------------------------------------------------
+
 #include "CSAx.hlsli"
 #include "CHConjGrad.hlsli"
 
-Texture3D<float>	b;
+Texture3D<float>			b;
 
-RWBuffer<float>		r;
-RWBuffer<float>		rr;
-RWTexture3D<float>	p;
+RWStructuredBuffer<float>	r;
+RWStructuredBuffer<float>	rr;
+RWTexture3D<float>			p;
 
 [numthreads(THREAD_GROUP_SIZE, THREAD_GROUP_SIZE, THREAD_GROUP_SIZE)]
 void main( uint3 DTid : SV_DispatchThreadID )

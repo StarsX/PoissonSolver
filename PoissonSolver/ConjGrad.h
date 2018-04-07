@@ -1,3 +1,7 @@
+//--------------------------------------------------------------------------------------
+// By XU, Tianchen
+//--------------------------------------------------------------------------------------
+
 #pragma once
 
 #ifdef PRECOMPILED_HEADER
@@ -37,11 +41,6 @@ protected:
 	void update_p(const DirectX::XMUINT3 &vSize);
 	void compute_pAp(const DirectX::XMUINT3 &vSize);
 	void swapBuffers();
-	void computeElementSize(DXGI_FORMAT eFormat);
-
-	D3DX11_SCAN_DATA_TYPE		m_eScanDataType;
-
-	uint32_t					m_uElementSize;
 
 	uint32_t					m_uRefCount;
 	uint32_t					m_uSRVSlot_b;

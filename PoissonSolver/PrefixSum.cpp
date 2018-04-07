@@ -1,3 +1,7 @@
+//--------------------------------------------------------------------------------------
+// By XU, Tianchen
+//--------------------------------------------------------------------------------------
+
 #include "PrefixSum.h"
 
 #ifndef V_RETURN
@@ -26,7 +30,7 @@ HRESULT PrefixSum::Init(const uint32_t uSize)
 	hr = m_pd3dDevice->CreateComputeShader(
 		shaderBuffer->GetBufferPointer(),
 		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM1]
+		nullptr, &m_pShaders[CS_PREFIXSUM1_FLOAT]
 	);
 
 	if (shaderBuffer) shaderBuffer->Release();
@@ -37,7 +41,51 @@ HRESULT PrefixSum::Init(const uint32_t uSize)
 	hr = m_pd3dDevice->CreateComputeShader(
 		shaderBuffer->GetBufferPointer(),
 		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM2]
+		nullptr, &m_pShaders[CS_PREFIXSUM2_FLOAT]
+	);
+
+	if (shaderBuffer) shaderBuffer->Release();
+	V_RETURN(hr);
+
+	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum1i.cso", &shaderBuffer));
+
+	hr = m_pd3dDevice->CreateComputeShader(
+		shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(),
+		nullptr, &m_pShaders[CS_PREFIXSUM1_INT]
+	);
+
+	if (shaderBuffer) shaderBuffer->Release();
+	V_RETURN(hr);
+
+	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum2i.cso", &shaderBuffer));
+
+	hr = m_pd3dDevice->CreateComputeShader(
+		shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(),
+		nullptr, &m_pShaders[CS_PREFIXSUM2_INT]
+	);
+
+	if (shaderBuffer) shaderBuffer->Release();
+	V_RETURN(hr);
+
+	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum1u.cso", &shaderBuffer));
+
+	hr = m_pd3dDevice->CreateComputeShader(
+		shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(),
+		nullptr, &m_pShaders[CS_PREFIXSUM1_UINT]
+	);
+
+	if (shaderBuffer) shaderBuffer->Release();
+	V_RETURN(hr);
+
+	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum2u.cso", &shaderBuffer));
+
+	hr = m_pd3dDevice->CreateComputeShader(
+		shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(),
+		nullptr, &m_pShaders[CS_PREFIXSUM2_UINT]
 	);
 
 	if (shaderBuffer) shaderBuffer->Release();
@@ -49,9 +97,25 @@ HRESULT PrefixSum::Init(const uint32_t uSize)
 	return hr;
 }
 
-void PrefixSum::Scan(const uint32_t uSize, ID3D11UnorderedAccessView *const pSrc, ID3D11UnorderedAccessView *const pDst)
+void PrefixSum::Scan(const SCAN_DATA_TYPE dataType, const uint32_t uSize, ID3D11UnorderedAccessView *const pSrc, ID3D11UnorderedAccessView *const pDst)
 {
 	const auto UAVInitialCounts = 0u;
+	uint32_t CS_PREFIXSUM1, CS_PREFIXSUM2;
+
+	switch (dataType)
+	{
+	case SCAN_DATA_TYPE_FLOAT:
+		CS_PREFIXSUM1 = CS_PREFIXSUM1_FLOAT;
+		CS_PREFIXSUM2 = CS_PREFIXSUM2_FLOAT;
+		break;
+	case SCAN_DATA_TYPE_INT:
+		CS_PREFIXSUM1 = CS_PREFIXSUM1_INT;
+		CS_PREFIXSUM2 = CS_PREFIXSUM2_INT;
+		break;
+	default:
+		CS_PREFIXSUM1 = CS_PREFIXSUM1_UINT;
+		CS_PREFIXSUM2 = CS_PREFIXSUM2_UINT;
+	}
 
 	// 1 Group for 1024 consecutive counters.
 	const auto uNumGroups = static_cast<uint32_t>(ceil(uSize / 1024.0f));
