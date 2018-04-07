@@ -10,7 +10,7 @@
 RWStructuredBuffer<typeless>	g_RWPerBinValues	: register(u0);
 
 //--------------------------------------------------------------------------------------
-// Prefix sum on g_RWPerBinCount and saving the highest results in g_RWPreSumInc.
+// Prefix sum on g_RWPerBinValues and saving the highest results in g_RWPreSumInc.
 //--------------------------------------------------------------------------------------
 [numthreads(NUM_THREADS_PER_GROUP, 1, 1)]
 void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3 Gid : SV_GroupID)
