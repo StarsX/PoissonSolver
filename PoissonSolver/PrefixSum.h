@@ -30,7 +30,7 @@ public:
 
 	HRESULT Init(const uint32_t uSize);
 
-	void Scan(const SCAN_DATA_TYPE dataType, const uint32_t uSize, ID3D11UnorderedAccessView *const pSrc, ID3D11UnorderedAccessView *const pDst);
+	void Scan(const SCAN_DATA_TYPE dataType, const uint32_t uSize, ID3D11UnorderedAccessView *const pUAVSrc, ID3D11UnorderedAccessView *const pUAVDst);
 	void AddRef();
 	void Release();
 
@@ -40,10 +40,13 @@ protected:
 	enum ComputeShaderID : uint32_t
 	{
 		CS_PREFIXSUM1_FLOAT,
+		CS_PREFIXSUM1_FLOAT_RW,
 		CS_PREFIXSUM2_FLOAT,
 		CS_PREFIXSUM1_INT,
+		CS_PREFIXSUM1_INT_RW,
 		CS_PREFIXSUM2_INT,
 		CS_PREFIXSUM1_UINT,
+		CS_PREFIXSUM1_UINT_RW,
 		CS_PREFIXSUM2_UINT,
 
 		NUM_CS
@@ -51,8 +54,12 @@ protected:
 
 	uint32_t					m_uRefCount;
 
-	ID3D11Buffer				*m_pPreSumInc;
-	ID3D11UnorderedAccessView	*m_pUAVPreSumInc;
+	uint32_t					m_uUAVSlot_Dst;
+	uint32_t					m_uUAVSlot_Inc;
+	uint32_t					m_uUAVSlot_Src;
+
+	ID3D11Buffer				*m_pInc;
+	ID3D11UnorderedAccessView	*m_pUAVInc;
 
 	ID3D11ComputeShader			*m_pShaders[NUM_CS];
 

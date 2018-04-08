@@ -134,18 +134,21 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 	ID3DBlob *shaderBuffer = nullptr;
 	D3D11_SHADER_INPUT_BIND_DESC desc;
 
-	if (pInitShader) {
+	if (pInitShader)
+	{
 		m_pInitShader = pInitShader;
 		m_pInitShader->AddRef();
 	}
-	else {
+	else
+	{
 		V_RETURN(D3DReadFileToBlob(L"CSInit.cso", &shaderBuffer));
 		hr = m_pd3dDevice->CreateComputeShader(
 			shaderBuffer->GetBufferPointer(),
 			shaderBuffer->GetBufferSize(),
 			nullptr, &m_pInitShader
 			);
-		if (SUCCEEDED(hr)) {
+		if (SUCCEEDED(hr))
+		{
 			ID3D11ShaderReflection *pReflector = nullptr;
 			hr = D3DReflect(
 				shaderBuffer->GetBufferPointer(),
@@ -153,7 +156,8 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 				IID_ID3D11ShaderReflection,
 				(void**)&pReflector
 				);
-			if (SUCCEEDED(hr)) {
+			if (SUCCEEDED(hr))
+			{
 				h = pReflector->GetResourceBindingDescByName("b", &desc);
 				if (SUCCEEDED(h)) m_uSRVSlot_b = desc.BindPoint;
 				else hr = h;
@@ -178,7 +182,7 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 			if (pReflector) pReflector->Release();
 		}
 		if (shaderBuffer) shaderBuffer->Release();
-		if (FAILED(hr)) return hr;
+		V_RETURN(hr);
 	}
 
 	shaderBuffer = nullptr;
@@ -188,7 +192,8 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 		shaderBuffer->GetBufferSize(),
 		nullptr, &m_pShader
 		);
-	if (SUCCEEDED(hr)) {
+	if (SUCCEEDED(hr))
+	{
 		ID3D11ShaderReflection *pReflector = nullptr;
 		hr = D3DReflect(
 			shaderBuffer->GetBufferPointer(),
@@ -196,7 +201,8 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 			IID_ID3D11ShaderReflection,
 			(void**)&pReflector
 			);
-		if (SUCCEEDED(hr)) {
+		if (SUCCEEDED(hr))
+		{
 			h = pReflector->GetResourceBindingDescByName("p_RO", &desc);
 			if (SUCCEEDED(h)) m_uSRVSlot_p = desc.BindPoint;
 			else hr = h;
@@ -227,7 +233,7 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 		if (pReflector) pReflector->Release();
 	}
 	if (shaderBuffer) shaderBuffer->Release();
-	if (FAILED(hr)) return hr;
+	V_RETURN(hr);
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSpUpdate.cso", &shaderBuffer));
@@ -236,7 +242,8 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 		shaderBuffer->GetBufferSize(),
 		nullptr, &m_pUpdateShader
 		);
-	if (SUCCEEDED(hr)) {
+	if (SUCCEEDED(hr))
+	{
 		ID3D11ShaderReflection *pReflector = nullptr;
 		hr = D3DReflect(
 			shaderBuffer->GetBufferPointer(),
@@ -244,7 +251,8 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 			IID_ID3D11ShaderReflection,
 			(void**)&pReflector
 			);
-		if (SUCCEEDED(hr)) {
+		if (SUCCEEDED(hr))
+		{
 			h = pReflector->GetResourceBindingDescByName("r_RO", &desc);
 			if (SUCCEEDED(h)) m_uSRVSlot_r = desc.BindPoint;
 			else hr = h;
@@ -266,9 +274,11 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 		if (pReflector) pReflector->Release();
 	}
 	if (shaderBuffer) shaderBuffer->Release();
-	if (FAILED(hr)) return hr;
+	V_RETURN(hr);
 
-	if (pApShader) {
+	shaderBuffer = nullptr;
+	if (pApShader)
+	{
 		m_pApShader = pApShader;
 		m_pApShader->AddRef();
 	}
@@ -279,7 +289,8 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 			shaderBuffer->GetBufferSize(),
 			nullptr, &m_pApShader
 			);
-		if (SUCCEEDED(hr)) {
+		if (SUCCEEDED(hr))
+		{
 			ID3D11ShaderReflection *pReflector = nullptr;
 			hr = D3DReflect(
 				shaderBuffer->GetBufferPointer(),
@@ -287,7 +298,8 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 				IID_ID3D11ShaderReflection,
 				(void**)&pReflector
 				);
-			if (SUCCEEDED(hr)) {
+			if (SUCCEEDED(hr))
+			{
 				h = pReflector->GetResourceBindingDescByName("x", &desc);
 				if (SUCCEEDED(h)) m_uSRVSlot_p_new = desc.BindPoint;
 				else hr = h;
@@ -306,7 +318,7 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 			if (pReflector) pReflector->Release();
 		}
 		if (shaderBuffer) shaderBuffer->Release();
-		if (FAILED(hr)) return hr;
+		V_RETURN(hr);
 	}
 
 	return hr;
@@ -334,7 +346,8 @@ void ConjGrad::Solve(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc,
 	m_pd3dContext->CSSetUnorderedAccessViews(0, 1, &g_pNullUAV, &UAVInitialCounts);
 
 	// Iteration
-	for (auto i = 0u; i < iNumIt; ++i) {
+	for (auto i = 0u; i < iNumIt; ++i)
+	{
 		compute_pAp(vSize);
 		//m_pScan->Scan(D3DX11_SCAN_DATA_TYPE_FLOAT, D3DX11_SCAN_OPCODE_ADD, uScanSize, m_pUAVpAp, m_pUAVpAp);
 		m_pScan->Scan(PrefixSum::SCAN_DATA_TYPE_FLOAT, uScanSize, m_pUAVpAp, m_pUAVpAp);

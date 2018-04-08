@@ -10,7 +10,11 @@
 //--------------------------------------------------------------------------------------
 // Unordered Access Buffers
 //--------------------------------------------------------------------------------------
-RWStructuredBuffer<typeless>		g_RWPreSumInc	: register(u1);
+RWStructuredBuffer<typeless>		g_RWDst;
+RWStructuredBuffer<typeless>		g_RWInc;
+#ifndef g_RWSrc
+RWStructuredBuffer<typeless>		g_RWSrc;
+#endif
 
 //--------------------------------------------------------------------------------------
 // Groupshared memory.

@@ -85,6 +85,15 @@
     <FxCompile Include="CSPrefixSum2u.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="CSPrefixSum1i_rw.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CSPrefixSum1_rw.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CSPrefixSum1u_rw.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="CSScanBlockBuffer.hlsli">

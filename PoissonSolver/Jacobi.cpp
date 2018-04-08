@@ -48,7 +48,8 @@ HRESULT Jacobi::Init()
 		nullptr, &m_pShader
 		);
 
-	if (SUCCEEDED(hr)) {
+	if (SUCCEEDED(hr))
+	{
 		ID3D11ShaderReflection *pReflector = nullptr;
 		auto h = D3DReflect(
 			shaderBuffer->GetBufferPointer(),
@@ -57,7 +58,8 @@ HRESULT Jacobi::Init()
 			(void**)&pReflector
 			);
 
-		if (SUCCEEDED(h)) {
+		if (SUCCEEDED(h))
+		{
 			D3D11_SHADER_INPUT_BIND_DESC desc;
 			h = pReflector->GetResourceBindingDescByName("b", &desc);
 			if (SUCCEEDED(h)) m_uSRVSlot = desc.BindPoint;

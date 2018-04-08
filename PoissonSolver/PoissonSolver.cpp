@@ -87,7 +87,7 @@ int __cdecl main()
 		return 1;
 	printf("done\n");
 
-	const auto uDim = 32u;
+	const auto uDim = 64u;
 	const XMUINT3 vSize(uDim, uDim, uDim);
 	float *b = new float[vSize.x * vSize.y * vSize.z];
 
@@ -98,9 +98,12 @@ int __cdecl main()
 
 	printf("Creating buffers and filling them with initial data...");
 	// The number of elements in a buffer to be tested
-	for (auto i = 0u; i < vSize.z; ++i) {
-		for (auto j = 0u; j < vSize.y; ++j) {
-			for (auto k = 0u; k < vSize.x; ++k) {
+	for (auto i = 0u; i < vSize.z; ++i)
+	{
+		for (auto j = 0u; j < vSize.y; ++j)
+		{
+			for (auto k = 0u; k < vSize.x; ++k)
+			{
 				b[i * vSize.x * vSize.y + j * vSize.x + k] = (rand() % 256 - 255) / 255.0f;
 			}
 		}
@@ -147,7 +150,7 @@ int __cdecl main()
 	printf("Solving by Jacobi iteration...");
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	g_pSolverJacobi->Solve(vSize, g_pbSRV, g_pxUAV, 1920);
+	g_pSolverJacobi->Solve(vSize, g_pbSRV, g_pxUAV, 150 * uDim);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 	
@@ -162,7 +165,7 @@ int __cdecl main()
 	printf("Solving by conjugate gradient...");
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 120);
+	g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 15 * max(uDim / 4, 1));
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 
@@ -190,9 +193,12 @@ int __cdecl main()
 		// Verify that if Compute Shader has done right
 		printf("Print result (by Jacobi iteration)...\n");
 		auto uPitch = max(vSize.x, 32);
-		for (auto i = 0u; i < vSize.z; ++i) {
-			for (auto j = 0u; j < vSize.y; ++j) {
-				for (auto k = 0u; k < vSize.x; ++k) {
+		for (auto i = 0u; i < vSize.z; ++i)
+		{
+			for (auto j = 0u; j < vSize.y; ++j)
+			{
+				for (auto k = 0u; k < vSize.x; ++k)
+				{
 					printf("%.4f ", p[i * uPitch * vSize.y + j * uPitch + k]);
 				}
 				printf("\n");
@@ -218,9 +224,12 @@ int __cdecl main()
 		// Verify that if Compute Shader has done right
 		printf("Print result (by conjugate gradient)...\n");
 		auto uPitch = max(vSize.x, 32);
-		for (auto i = 0u; i < vSize.z; ++i) {
-			for (auto j = 0u; j < vSize.y; ++j) {
-				for (auto k = 0u; k < vSize.x; ++k) {
+		for (auto i = 0u; i < vSize.z; ++i)
+		{
+			for (auto j = 0u; j < vSize.y; ++j)
+			{
+				for (auto k = 0u; k < vSize.x; ++k)
+				{
 					printf("%.4f ", p[i * uPitch * vSize.y + j * uPitch + k]);
 				}
 				printf("\n");
@@ -482,7 +491,7 @@ ID3D11Texture3D* CreateAndCopyToDebugTex(ID3D11Device* pDevice, ID3D11DeviceCont
 	if (SUCCEEDED(pDevice->CreateTexture3D(&desc, nullptr, &debugTex)))
 	{
 #if defined(_DEBUG) || defined(PROFILE)
-		debugbuf->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("Debug") - 1, "Debug");
+		debugTex->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("Debug") - 1, "Debug");
 #endif
 
 		pd3dImmediateContext->CopyResource(debugTex, pTex);
