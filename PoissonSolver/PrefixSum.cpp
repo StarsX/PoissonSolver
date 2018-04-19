@@ -28,20 +28,13 @@ HRESULT PrefixSum::Init(const uint32_t uSize)
 	HRESULT h, hr;
 	ID3DBlob *shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum1.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM1_FLOAT]
-	);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShaders[CS_PREFIXSUM1_FLOAT]);
 	if (SUCCEEDED(hr))
 	{
 		ID3D11ShaderReflection *pReflector = nullptr;
-		hr = D3DReflect(
-			shaderBuffer->GetBufferPointer(),
-			shaderBuffer->GetBufferSize(),
-			IID_ID3D11ShaderReflection,
-			(void**)&pReflector
-		);
+		hr = D3DReflect(shaderBuffer->GetBufferPointer(), shaderBuffer->GetBufferSize(),
+			IID_ID3D11ShaderReflection, (void**)&pReflector);
 		if (SUCCEEDED(hr))
 		{
 			D3D11_SHADER_INPUT_BIND_DESC desc;
@@ -64,81 +57,57 @@ HRESULT PrefixSum::Init(const uint32_t uSize)
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum1_rw.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM1_FLOAT_RW]
-	);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShaders[CS_PREFIXSUM1_FLOAT_RW]);
 	if (shaderBuffer) shaderBuffer->Release();
 	V_RETURN(hr);
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum2.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM2_FLOAT]
-	);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShaders[CS_PREFIXSUM2_FLOAT]);
 	if (shaderBuffer) shaderBuffer->Release();
 	V_RETURN(hr);
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum1i.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM1_INT]
-	);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShaders[CS_PREFIXSUM1_INT]);
 	if (shaderBuffer) shaderBuffer->Release();
 	V_RETURN(hr);
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum1i_rw.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM1_INT_RW]
-	);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShaders[CS_PREFIXSUM1_INT_RW]);
 	if (shaderBuffer) shaderBuffer->Release();
 	V_RETURN(hr);
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum2i.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM2_INT]
-	);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShaders[CS_PREFIXSUM2_INT]);
 	if (shaderBuffer) shaderBuffer->Release();
 	V_RETURN(hr);
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum1u.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM1_UINT]
-	);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShaders[CS_PREFIXSUM1_UINT]);
 	if (shaderBuffer) shaderBuffer->Release();
 	V_RETURN(hr);
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum1u_rw.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM1_UINT_RW]
-	);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShaders[CS_PREFIXSUM1_UINT_RW]);
 	if (shaderBuffer) shaderBuffer->Release();
 	V_RETURN(hr);
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSPrefixSum2u.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShaders[CS_PREFIXSUM2_UINT]
-	);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShaders[CS_PREFIXSUM2_UINT]);
 	if (shaderBuffer) shaderBuffer->Release();
 	V_RETURN(hr);
 
@@ -148,7 +117,8 @@ HRESULT PrefixSum::Init(const uint32_t uSize)
 	return hr;
 }
 
-void PrefixSum::Scan(const SCAN_DATA_TYPE dataType, const uint32_t uSize, ID3D11UnorderedAccessView *const pUAVSrc, ID3D11UnorderedAccessView *const pUAVDst)
+void PrefixSum::Scan(const SCAN_DATA_TYPE dataType, const uint32_t uSize,
+	ID3D11UnorderedAccessView *const pUAVSrc, ID3D11UnorderedAccessView *const pUAVDst)
 {
 	const auto UAVInitialCounts = 0u;
 	uint32_t CS_PREFIXSUM1, CS_PREFIXSUM1_RW, CS_PREFIXSUM2;

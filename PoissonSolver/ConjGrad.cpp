@@ -9,6 +9,12 @@
 #define V_RETURN(x)	{ hr = x; if (FAILED(hr)) return hr; }
 #endif
 
+#if 0
+#define	SCAN_DATA_TYPE(t)	D3DX11_SCAN_DATA_TYPE_##t
+#else
+#define	SCAN_DATA_TYPE(t)	PrefixSum::SCAN_DATA_TYPE_##t
+#endif
+
 using namespace DirectX;
 using namespace std;
 
@@ -79,9 +85,10 @@ HRESULT ConjGrad::Init(DXGI_FORMAT eFormat, const XMUINT3 &vSize,
 	ID3D11ComputeShader *const pInitShader, ID3D11ComputeShader *const pApShader)
 {
 	HRESULT hr;
+	computeElementSize(eFormat);
+
 	V_RETURN(initShaders(pInitShader, pApShader));
 	V_RETURN(initBuffers(eFormat, vSize));
-	V_RETURN(createConstBuffer(vSize));
 
 	//V_RETURN(D3DX11CreateScan(m_pd3dContext, vSize.x * vSize.y * vSize.z + 1, 1, &m_pScan));
 	//V_RETURN(m_pScan->SetScanDirection(D3DX11_SCAN_DIRECTION_FORWARD));
@@ -93,30 +100,27 @@ HRESULT ConjGrad::Init(DXGI_FORMAT eFormat, const XMUINT3 &vSize,
 HRESULT ConjGrad::initBuffers(DXGI_FORMAT eFormat, const XMUINT3 &vSize)
 {
 	HRESULT hr;
-
-	const auto uSize = vSize.x * vSize.y * vSize.z;
-	const auto uScanSize = uSize + 1;
-	const auto uElementSize = sizeof(float);
+	const auto uScanSize = vSize.x * vSize.y * vSize.z + 1;
 
 	// r related
-	V_RETURN(CreateStructuredBuffer(m_pd3dDevice, uElementSize, uScanSize, nullptr, &m_prr[0]));
+	V_RETURN(CreateStructuredBuffer(m_pd3dDevice, m_uElementSize, uScanSize, nullptr, &m_prr[0]));
 	V_RETURN(CreateBufferSRV(m_pd3dDevice, m_prr[0], &m_pSRVAcc_rr));
 	V_RETURN(CreateBufferUAV(m_pd3dDevice, m_prr[0], &m_pUAVrr0));
 
-	V_RETURN(CreateStructuredBuffer(m_pd3dDevice, uElementSize, uScanSize, nullptr, &m_prr[1]));
+	V_RETURN(CreateStructuredBuffer(m_pd3dDevice, m_uElementSize, uScanSize, nullptr, &m_prr[1]));
 	V_RETURN(CreateBufferSRV(m_pd3dDevice, m_prr[1], &m_pSRVAcc_rr_new));
 	V_RETURN(CreateBufferUAV(m_pd3dDevice, m_prr[1], &m_pUAVrr));
 
-	V_RETURN(CreateStructuredBuffer(m_pd3dDevice, uElementSize, uSize, nullptr, &m_pr));
-	V_RETURN(CreateBufferSRV(m_pd3dDevice, m_pr, &m_pSRVr));
-	V_RETURN(CreateBufferUAV(m_pd3dDevice, m_pr, &m_pUAVr));
+	V_RETURN(CreateTexture3D(m_pd3dDevice, eFormat, vSize, nullptr, &m_pr));
+	V_RETURN(CreateTexture3DSRV(m_pd3dDevice, m_pr, &m_pSRVr));
+	V_RETURN(CreateTexture3DUAV(m_pd3dDevice, m_pr, &m_pUAVr));
 
 	// p related
-	V_RETURN(CreateStructuredBuffer(m_pd3dDevice, uElementSize, uSize, nullptr, &m_pAp));
-	V_RETURN(CreateBufferSRV(m_pd3dDevice, m_pAp, &m_pSRVAp));
-	V_RETURN(CreateBufferUAV(m_pd3dDevice, m_pAp, &m_pUAVAp));
+	V_RETURN(CreateTexture3D(m_pd3dDevice, eFormat, vSize, nullptr, &m_pAp));
+	V_RETURN(CreateTexture3DSRV(m_pd3dDevice, m_pAp, &m_pSRVAp));
+	V_RETURN(CreateTexture3DUAV(m_pd3dDevice, m_pAp, &m_pUAVAp));
 	
-	V_RETURN(CreateStructuredBuffer(m_pd3dDevice, uElementSize, uScanSize, nullptr, &m_ppAp));
+	V_RETURN(CreateStructuredBuffer(m_pd3dDevice, m_uElementSize, uScanSize, nullptr, &m_ppAp));
 	V_RETURN(CreateBufferSRV(m_pd3dDevice, m_ppAp, &m_pSRVAcc_pAp));
 	V_RETURN(CreateBufferUAV(m_pd3dDevice, m_ppAp, &m_pUAVpAp));
 
@@ -174,10 +178,6 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 				h = pReflector->GetResourceBindingDescByName("p", &desc);
 				if (SUCCEEDED(h)) m_uUAVSlot_p0 = desc.BindPoint;
 				else hr = h;
-
-				h = pReflector->GetResourceBindingDescByName("cbDimension", &desc);
-				if (SUCCEEDED(h)) m_uCBSlot_init = desc.BindPoint;
-				else hr = h;
 			}
 			if (pReflector) pReflector->Release();
 		}
@@ -225,10 +225,6 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 			h = pReflector->GetResourceBindingDescByName("rr", &desc);
 			if (SUCCEEDED(h)) m_uUAVSlot_rr = desc.BindPoint;
 			else hr = h;
-
-			h = pReflector->GetResourceBindingDescByName("cbDimension", &desc);
-			if (SUCCEEDED(h)) m_uCBSlot_x = desc.BindPoint;
-			else hr = h;
 		}
 		if (pReflector) pReflector->Release();
 	}
@@ -265,10 +261,6 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 
 			h = pReflector->GetResourceBindingDescByName("p", &desc);
 			if (SUCCEEDED(h)) m_uUAVSlot_p = desc.BindPoint;
-			else hr = h;
-
-			h = pReflector->GetResourceBindingDescByName("cbDimension", &desc);
-			if (SUCCEEDED(h)) m_uCBSlot_p = desc.BindPoint;
 			else hr = h;
 		}
 		if (pReflector) pReflector->Release();
@@ -310,10 +302,6 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 				h = pReflector->GetResourceBindingDescByName("pAp", &desc);
 				if (SUCCEEDED(h)) m_uUAVSlot_pAp = desc.BindPoint;
 				else hr = h;
-
-				h = pReflector->GetResourceBindingDescByName("cbDimension", &desc);
-				if (SUCCEEDED(h)) m_uCBSlot_pAp = desc.BindPoint;
-				else hr = h;
 			}
 			if (pReflector) pReflector->Release();
 		}
@@ -322,16 +310,6 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 	}
 
 	return hr;
-}
-
-HRESULT ConjGrad::createConstBuffer(const XMUINT3 &vSize)
-{
-	D3D11_BUFFER_DESC desc = CD3D11_BUFFER_DESC(sizeof(XMUINT4), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_IMMUTABLE);
-	D3D11_SUBRESOURCE_DATA initData;
-	initData.pSysMem = &vSize;
-	initData.SysMemPitch = 0;
-	initData.SysMemSlicePitch = 0;
-	return m_pd3dDevice->CreateBuffer(&desc, &initData, &m_pCBDim);
 }
 
 void ConjGrad::Solve(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, ID3D11UnorderedAccessView *const pDst, uint32_t iNumIt)
@@ -378,7 +356,6 @@ void ConjGrad::init(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, 
 	const auto UAVInitialCounts = 0u;
 
 	// Setup
-	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_init, 1, &m_pCBDim);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_b, 1, &pSrc);
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_x0, 1, &pDst, &UAVInitialCounts);
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_r0, 1, &m_pUAVr, &UAVInitialCounts);
@@ -395,7 +372,6 @@ void ConjGrad::init(const XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, 
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_r0, 1, &g_pNullUAV, &UAVInitialCounts);
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_x0, 1, &g_pNullUAV, &UAVInitialCounts);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_b, 1, &g_pNullSRV);
-	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_init, 1, &g_pNullBuffer);
 }
 
 void ConjGrad::update_x(const XMUINT3 &vSize, ID3D11UnorderedAccessView *const pDst)
@@ -403,7 +379,6 @@ void ConjGrad::update_x(const XMUINT3 &vSize, ID3D11UnorderedAccessView *const p
 	const auto UAVInitialCounts = 0u;
 
 	// Setup
-	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_x, 1, &m_pCBDim);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_p, 1, &m_pSRVp);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_Ap, 1, &m_pSRVAp);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_Acc_rr, 1, &m_pSRVAcc_rr);
@@ -424,7 +399,6 @@ void ConjGrad::update_x(const XMUINT3 &vSize, ID3D11UnorderedAccessView *const p
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_Acc_rr, 1, &g_pNullSRV);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_Ap, 1, &g_pNullSRV);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_p, 1, &g_pNullSRV);
-	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_x, 1, &g_pNullBuffer);
 }
 
 void ConjGrad::update_p(const XMUINT3 &vSize)
@@ -432,7 +406,6 @@ void ConjGrad::update_p(const XMUINT3 &vSize)
 	const auto UAVInitialCounts = 0u;
 
 	// Setup
-	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_p, 1, &m_pCBDim);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_r, 1, &m_pSRVr);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_Acc_rr_prev, 1, &m_pSRVAcc_rr);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_Acc_rr_new, 1, &m_pSRVAcc_rr_new);
@@ -447,7 +420,6 @@ void ConjGrad::update_p(const XMUINT3 &vSize)
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_Acc_rr_new, 1, &g_pNullSRV);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_Acc_rr_prev, 1, &g_pNullSRV);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_r, 1, &g_pNullSRV);
-	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_p, 1, &g_pNullBuffer);
 }
 
 void ConjGrad::compute_pAp(const XMUINT3 &vSize)
@@ -455,7 +427,6 @@ void ConjGrad::compute_pAp(const XMUINT3 &vSize)
 	const auto UAVInitialCounts = 0u;
 
 	// Setup
-	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_pAp, 1, &m_pCBDim);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_p_new, 1, &m_pSRVp);
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_Ap, 1, &m_pUAVAp, &UAVInitialCounts);
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_pAp, 1, &m_pUAVpAp, &UAVInitialCounts);
@@ -468,7 +439,6 @@ void ConjGrad::compute_pAp(const XMUINT3 &vSize)
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_pAp, 1, &g_pNullUAV, &UAVInitialCounts);
 	m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_Ap, 1, &g_pNullUAV, &UAVInitialCounts);
 	m_pd3dContext->CSSetShaderResources(m_uSRVSlot_p_new, 1, &g_pNullSRV);
-	m_pd3dContext->CSSetConstantBuffers(m_uCBSlot_pAp, 1, &g_pNullBuffer);
 }
 
 void ConjGrad::swapBuffers()
@@ -480,4 +450,59 @@ void ConjGrad::swapBuffers()
 	ID3D11UnorderedAccessView* pUAV = m_pUAVrr0;
 	m_pUAVrr0 = m_pUAVrr;
 	m_pUAVrr = pUAV;
+}
+
+void ConjGrad::computeElementSize(DXGI_FORMAT eFormat)
+{
+	switch (eFormat)
+	{
+	case DXGI_FORMAT_R32_FLOAT:
+		m_uElementSize = sizeof(float);
+		m_eScanDataType = SCAN_DATA_TYPE(FLOAT);
+		return;
+	case DXGI_FORMAT_R32_UINT:
+		m_uElementSize = sizeof(uint32_t);
+		m_eScanDataType = SCAN_DATA_TYPE(UINT);
+		return;
+	case DXGI_FORMAT_R32_SINT:
+		m_uElementSize = sizeof(int32_t);
+		m_eScanDataType = SCAN_DATA_TYPE(INT);
+		return;
+	case DXGI_FORMAT_R32G32_FLOAT:
+		m_uElementSize = sizeof(XMFLOAT2);
+		m_eScanDataType = SCAN_DATA_TYPE(FLOAT);
+		return;
+	case DXGI_FORMAT_R32G32_UINT:
+		m_uElementSize = sizeof(XMUINT2);
+		m_eScanDataType = SCAN_DATA_TYPE(UINT);
+		return;
+	case DXGI_FORMAT_R32G32_SINT:
+		m_uElementSize = sizeof(XMINT2);
+		m_eScanDataType = SCAN_DATA_TYPE(INT);
+		return;
+	case DXGI_FORMAT_R32G32B32_FLOAT:
+		m_uElementSize = sizeof(XMFLOAT3);
+		m_eScanDataType = SCAN_DATA_TYPE(FLOAT);
+		return;
+	case DXGI_FORMAT_R32G32B32_UINT:
+		m_uElementSize = sizeof(XMUINT3);
+		m_eScanDataType = SCAN_DATA_TYPE(UINT);
+		return;
+	case DXGI_FORMAT_R32G32B32_SINT:
+		m_uElementSize = sizeof(XMINT3);
+		m_eScanDataType = SCAN_DATA_TYPE(INT);
+		return;
+	case DXGI_FORMAT_R32G32B32A32_FLOAT:
+		m_uElementSize = sizeof(XMFLOAT4);
+		m_eScanDataType = SCAN_DATA_TYPE(FLOAT);
+		return;
+	case DXGI_FORMAT_R32G32B32A32_UINT:
+		m_uElementSize = sizeof(XMUINT4);
+		m_eScanDataType = SCAN_DATA_TYPE(UINT);
+		return;
+	case DXGI_FORMAT_R32G32B32A32_SINT:
+		m_uElementSize = sizeof(XMINT4);
+		m_eScanDataType = SCAN_DATA_TYPE(INT);
+		return;
+	}
 }

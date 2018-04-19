@@ -5,7 +5,7 @@
 #include "CSScanBlockBuffer.hlsli"
 
 //--------------------------------------------------------------------------------------
-// Prefix sum on g_RWPreSumInc and writing the results back into g_RWPrefixSums.
+// Prefix sum on g_RWInc and writing the results back into g_RWDst.
 //--------------------------------------------------------------------------------------
 [numthreads(NUM_THREADS_PER_GROUP, 1, 1)]
 void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3 Gid : SV_GroupID)

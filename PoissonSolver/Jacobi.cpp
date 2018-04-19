@@ -42,21 +42,14 @@ HRESULT Jacobi::Init()
 	ID3DBlob *shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSJacobi.cso", &shaderBuffer));
 
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShader
-		);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShader);
 
 	if (SUCCEEDED(hr))
 	{
 		ID3D11ShaderReflection *pReflector = nullptr;
-		auto h = D3DReflect(
-			shaderBuffer->GetBufferPointer(),
-			shaderBuffer->GetBufferSize(),
-			IID_ID3D11ShaderReflection,
-			(void**)&pReflector
-			);
+		auto h = D3DReflect(shaderBuffer->GetBufferPointer(), shaderBuffer->GetBufferSize(),
+			IID_ID3D11ShaderReflection, (void**)&pReflector);
 
 		if (SUCCEEDED(h))
 		{

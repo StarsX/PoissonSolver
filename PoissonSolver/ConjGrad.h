@@ -35,12 +35,17 @@ public:
 protected:
 	HRESULT initShaders(ID3D11ComputeShader *const pInitShader, ID3D11ComputeShader *const pApShader);
 	HRESULT initBuffers(DXGI_FORMAT eFormat, const DirectX::XMUINT3 &vSize);
-	HRESULT createConstBuffer(const DirectX::XMUINT3 &vSize);
 	void init(const DirectX::XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, ID3D11UnorderedAccessView *const pDst);
 	void update_x(const DirectX::XMUINT3 &vSize, ID3D11UnorderedAccessView *const pDst);
 	void update_p(const DirectX::XMUINT3 &vSize);
 	void compute_pAp(const DirectX::XMUINT3 &vSize);
 	void swapBuffers();
+	void computeElementSize(DXGI_FORMAT eFormat);
+	
+	//D3DX11_SCAN_DATA_TYPE		m_eScanDataType;
+	PrefixSum::SCAN_DATA_TYPE	m_eScanDataType;
+
+	uint32_t					m_uElementSize;
 
 	uint32_t					m_uRefCount;
 	uint32_t					m_uSRVSlot_b;
@@ -64,20 +69,12 @@ protected:
 	uint32_t					m_uUAVSlot_Ap;
 	uint32_t					m_uUAVSlot_pAp;
 
-	uint32_t					m_uCBSlot_init;
-	uint32_t					m_uCBSlot_x;
-	uint32_t					m_uCBSlot_p;
-	uint32_t					m_uCBSlot_pAp;
-
-	ID3D11Buffer				*m_pCBDim;
+	ID3D11Texture3D				*m_pr;
+	ID3D11Texture3D				*m_pAp;
+	ID3D11Texture3D				*m_pp;
 
 	ID3D11Buffer				*m_prr[2];
-	ID3D11Buffer				*m_pr;
-
-	ID3D11Buffer				*m_pAp;
 	ID3D11Buffer				*m_ppAp;
-
-	ID3D11Texture3D				*m_pp;
 
 	ID3D11ShaderResourceView	*m_pSRVr;
 	ID3D11ShaderResourceView	*m_pSRVAcc_rr;

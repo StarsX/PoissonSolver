@@ -5,7 +5,7 @@
 #include "CSScanBlockBuffer.hlsli"
 
 //--------------------------------------------------------------------------------------
-// Prefix sum on g_RWPerBinValues and saving the highest results in g_RWPreSumInc.
+// Prefix sum on g_RWSrc and saving the highest results in g_RWInc.
 //--------------------------------------------------------------------------------------
 [numthreads(NUM_THREADS_PER_GROUP, 1, 1)]
 void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3 Gid : SV_GroupID)

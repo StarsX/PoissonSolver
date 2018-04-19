@@ -283,16 +283,16 @@ HRESULT CreateComputeDevice(ID3D11Device** ppDeviceOut, ID3D11DeviceContext** pp
 	bool bNeedRefDevice = false;
 	if (!bForceRef)
 	{
-		hr = D3D11CreateDevice(nullptr,                        // Use default graphics card
-			D3D_DRIVER_TYPE_HARDWARE,    // Try to create a hardware accelerated device
-			nullptr,                        // Do not use external software rasterizer module
-			uCreationFlags,              // Device creation flags
+		hr = D3D11CreateDevice(nullptr,	// Use default graphics card
+			D3D_DRIVER_TYPE_HARDWARE,	// Try to create a hardware accelerated device
+			nullptr,					// Do not use external software rasterizer module
+			uCreationFlags,				// Device creation flags
 			flvl,
 			sizeof(flvl) / sizeof(D3D_FEATURE_LEVEL),
-			D3D11_SDK_VERSION,           // SDK version
-			ppDeviceOut,                 // Device out
-			&flOut,                      // Actual feature level created
-			ppContextOut);              // Context out
+			D3D11_SDK_VERSION,			// SDK version
+			ppDeviceOut,				// Device out
+			&flOut,						// Actual feature level created
+			ppContextOut);				// Context out
 
 		if (SUCCEEDED(hr))
 		{
@@ -339,16 +339,16 @@ HRESULT CreateComputeDevice(ID3D11Device** ppDeviceOut, ID3D11DeviceContext** pp
 		SAFE_RELEASE(*ppDeviceOut);
 		SAFE_RELEASE(*ppContextOut);
 
-		hr = D3D11CreateDevice(nullptr,                        // Use default graphics card
-			D3D_DRIVER_TYPE_REFERENCE,   // Try to create a hardware accelerated device
-			nullptr,                        // Do not use external software rasterizer module
-			uCreationFlags,              // Device creation flags
+		hr = D3D11CreateDevice(nullptr,	// Use default graphics card
+			D3D_DRIVER_TYPE_REFERENCE,	// Try to create a hardware accelerated device
+			nullptr,					// Do not use external software rasterizer module
+			uCreationFlags,				// Device creation flags
 			flvl,
 			sizeof(flvl) / sizeof(D3D_FEATURE_LEVEL),
-			D3D11_SDK_VERSION,           // SDK version
-			ppDeviceOut,                 // Device out
-			&flOut,                      // Actual feature level created
-			ppContextOut);              // Context out
+			D3D11_SDK_VERSION,			// SDK version
+			ppDeviceOut,				// Device out
+			&flOut,						// Actual feature level created
+			ppContextOut);				// Context out
 		if (FAILED(hr))
 		{
 			printf("Reference rasterizer device create failure\n");
