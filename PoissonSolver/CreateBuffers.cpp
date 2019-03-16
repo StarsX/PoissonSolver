@@ -66,9 +66,9 @@ HRESULT CreateRawBuffer(ID3D11Device* pDevice, UINT uSize, void* pInitData, ID3D
 
 	if (pInitData)
 	{
-		D3D11_SUBRESOURCE_DATA InitData;
-		InitData.pSysMem = pInitData;
-		return pDevice->CreateBuffer(&desc, &InitData, ppBufOut);
+		D3D11_SUBRESOURCE_DATA initData;
+		initData.pSysMem = pInitData;
+		return pDevice->CreateBuffer(&desc, &initData, ppBufOut);
 	}
 	else
 		return pDevice->CreateBuffer(&desc, nullptr, ppBufOut);
@@ -78,23 +78,37 @@ HRESULT CreateRawBuffer(ID3D11Device* pDevice, UINT uSize, void* pInitData, ID3D
 // Create Texture 3D
 //--------------------------------------------------------------------------------------
 _Use_decl_annotations_
-HRESULT CreateTexture3D(ID3D11Device* pDevice, DXGI_FORMAT eFormat, XMUINT3 vSize, void* pInitData, ID3D11Texture3D** ppTexOut)
+HRESULT CreateTexture3D(ID3D11Device* pDevice, DXGI_FORMAT eFormat, XMUINT3 vSize, void* pInitData, ID3D11Texture3D** ppTexOut, uint32_t uMips)
 {
 	*ppTexOut = nullptr;
 
-	auto desc = CD3D11_TEXTURE3D_DESC(eFormat, vSize.x, vSize.y, vSize.z, 1);
+	auto desc = CD3D11_TEXTURE3D_DESC(eFormat, vSize.x, vSize.y, vSize.z, uMips);
 	desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
 
-	if (pInitData)
+	if (pInitData && uMips == 1)
 	{
-		D3D11_SUBRESOURCE_DATA InitData;
-		InitData.pSysMem = pInitData;
-		InitData.SysMemPitch = sizeof(float) * vSize.x;
-		InitData.SysMemSlicePitch = sizeof(float) * vSize.x * vSize.y;
-		return pDevice->CreateTexture3D(&desc, &InitData, ppTexOut);
+		D3D11_SUBRESOURCE_DATA initData;
+		initData.pSysMem = pInitData;
+		initData.SysMemPitch = sizeof(float) * vSize.x;
+		initData.SysMemSlicePitch = sizeof(float) * vSize.x * vSize.y;
+		return pDevice->CreateTexture3D(&desc, &initData, ppTexOut);
 	}
 	else
-		return pDevice->CreateTexture3D(&desc, nullptr, ppTexOut);
+	{
+		const auto hr = pDevice->CreateTexture3D(&desc, nullptr, ppTexOut);
+		if (SUCCEEDED(hr) && pInitData)
+		{
+			ID3D11DeviceContext* pContext;
+			pDevice->GetImmediateContext(&pContext);
+			if (pContext)
+			{
+				pContext->UpdateSubresource(*ppTexOut, 0, nullptr, pInitData, sizeof(float) * vSize.x, sizeof(float) * vSize.x * vSize.y);
+				pContext->Release();
+			}
+		}
+
+		return hr;
+	}
 }
 
 //--------------------------------------------------------------------------------------
@@ -141,10 +155,10 @@ HRESULT CreateBufferSRV(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, ID3D11Shad
 // Create Shader Resource View for Texture3D
 //--------------------------------------------------------------------------------------
 _Use_decl_annotations_
-HRESULT CreateTexture3DSRV(ID3D11Device* pDevice, ID3D11Texture3D* pTex, ID3D11ShaderResourceView** ppSRVOut)
+HRESULT CreateTexture3DSRV(ID3D11Device* pDevice, ID3D11Texture3D* pTex, ID3D11ShaderResourceView** ppSRVOut, uint32_t uMDMip, uint32_t uMips)
 {
 	// Setup the description of the shader resource view.
-	const auto desc = CD3D11_SHADER_RESOURCE_VIEW_DESC(pTex);
+	const auto desc = CD3D11_SHADER_RESOURCE_VIEW_DESC(pTex, DXGI_FORMAT_UNKNOWN, uMDMip, uMips);
 	// Create the shader resource view.
 	return pDevice->CreateShaderResourceView(pTex, &desc, ppSRVOut);
 }
@@ -193,10 +207,10 @@ HRESULT CreateBufferUAV(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, ID3D11Unor
 // Create Unordered Access View for Texture3D
 //-------------------------------------------------------------------------------------- 
 _Use_decl_annotations_
-HRESULT CreateTexture3DUAV(ID3D11Device* pDevice, ID3D11Texture3D* pTex, ID3D11UnorderedAccessView** ppUAVOut)
+HRESULT CreateTexture3DUAV(ID3D11Device* pDevice, ID3D11Texture3D* pTex, ID3D11UnorderedAccessView** ppUAVOut, uint32_t uMipSlice)
 {
 	// Setup the description of the shader resource view.
-	const auto desc = CD3D11_UNORDERED_ACCESS_VIEW_DESC(pTex);
+	const auto desc = CD3D11_UNORDERED_ACCESS_VIEW_DESC(pTex, DXGI_FORMAT_UNKNOWN, uMipSlice);
 	// Create the shader resource view.
 	return pDevice->CreateUnorderedAccessView(pTex, &desc, ppUAVOut);
 }

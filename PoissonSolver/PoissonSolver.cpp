@@ -12,9 +12,10 @@
 #include "CreateBuffers.h"
 #include "Jacobi.h"
 #include "ConjGrad.h"
+#include "Multigrid.h"
 
 using namespace DirectX;
-//using namespace std;
+using namespace std;
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -65,12 +66,17 @@ ID3D11DeviceContext*        g_pContext = nullptr;
 Jacobi*						g_pSolverJacobi = nullptr;
 ID3D11Texture3D*			g_px = nullptr;
 ID3D11Texture3D*			g_pb = nullptr;
-ID3D11ShaderResourceView*   g_pbSRV = nullptr;
+ID3D11ShaderResourceView*	g_pbSRV = nullptr;
+ID3D11UnorderedAccessView**	g_pbUAVs = nullptr;
 ID3D11UnorderedAccessView*  g_pxUAV = nullptr;
 
 ConjGrad*					g_pSolverConjGrad = nullptr;
 ID3D11Texture3D*			g_px_CG = nullptr;
 ID3D11UnorderedAccessView*  g_pxUAV_CG = nullptr;
+
+Multigrid*					g_pSolverMultigrid = nullptr;
+ID3D11Texture3D*			g_px_MG = nullptr;
+ID3D11UnorderedAccessView** g_pxUAVs = nullptr;
 
 //--------------------------------------------------------------------------------------
 // Entry point to the program
@@ -88,12 +94,14 @@ int __cdecl main()
 	printf("done\n");
 
 	const auto uDim = 64u;
+	const auto uMips = max(static_cast<uint32_t>(log2(uDim)) - 1, 1);
 	const XMUINT3 vSize(uDim, uDim, uDim);
 	float *b = new float[vSize.x * vSize.y * vSize.z];
 
 	printf("Creating solvers...");
 	if (FAILED(Jacobi::CreateSolver(g_pContext, &g_pSolverJacobi))) return 1;
 	if (FAILED(ConjGrad::CreateSolver(g_pContext, DXGI_FORMAT_R32_FLOAT, vSize, &g_pSolverConjGrad))) return 1;
+	if (FAILED(Multigrid::CreateSolver(g_pContext, &g_pSolverMultigrid))) return 1;
 	printf("done\n");
 
 	printf("Creating buffers and filling them with initial data...");
@@ -109,9 +117,10 @@ int __cdecl main()
 		}
 	}
 
-	CreateTexture3D(g_pDevice, DXGI_FORMAT_R32_FLOAT, vSize, b, &g_pb);
+	CreateTexture3D(g_pDevice, DXGI_FORMAT_R32_FLOAT, vSize, b, &g_pb, uMips);
 	CreateTexture3D(g_pDevice, DXGI_FORMAT_R32_FLOAT, vSize, nullptr, &g_px);
 	CreateTexture3D(g_pDevice, DXGI_FORMAT_R32_FLOAT, vSize, nullptr, &g_px_CG);
+	CreateTexture3D(g_pDevice, DXGI_FORMAT_R32_FLOAT, vSize, nullptr, &g_px_MG, uMips);
 
 #if defined(_DEBUG) || defined(PROFILE)
 	if (g_pb)
@@ -120,6 +129,8 @@ int __cdecl main()
 		g_px->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("x") - 1, "x");
 	if (g_px_CG)
 		g_px_CG->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("x_CG") - 1, "x_CG");
+	if (g_px_MG)
+		g_px_MG->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("x_MG") - 1, "x_MG");
 #endif
 
 	printf("done\n");
@@ -128,14 +139,25 @@ int __cdecl main()
 	CreateTexture3DSRV(g_pDevice, g_pb, &g_pbSRV);
 	CreateTexture3DUAV(g_pDevice, g_px, &g_pxUAV);
 	CreateTexture3DUAV(g_pDevice, g_px_CG, &g_pxUAV_CG);
+	g_pbUAVs = new ID3D11UnorderedAccessView*[uMips];
+	g_pxUAVs = new ID3D11UnorderedAccessView*[uMips];
+	for (auto i = 0u; i < uMips; ++i)
+	{
+		CreateTexture3DUAV(g_pDevice, g_pb, &g_pbUAVs[i], i);
+		CreateTexture3DUAV(g_pDevice, g_px_MG, &g_pxUAVs[i], i);
+	}
 
 #if defined(_DEBUG) || defined(PROFILE)
-	if (g_pbSRV)
-		g_pbSRV->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("b SRV") - 1, "b SRV");
+	g_pbSRV->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("b SRV") - 1, "b SRV");
 	if (g_pxUAV)
 		g_pxUAV->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("x UAV") - 1, "x UAV");
 	if (g_pxUAV_CG)
 		g_pxUAV_CG->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("x UAV CG") - 1, "x UAV CG");
+	for (auto i = 0u; i < uMips; ++i)
+	{
+		if (g_pbUAVs[i]) g_pbUAVs[i]->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("b UAV") - 1, "b UAV");
+		if (g_pxUAVs[i]) g_pxUAVs[i]->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof("x UAV") - 1, "x UAV");
+	}
 #endif
 
 	printf("done\n");
@@ -150,7 +172,7 @@ int __cdecl main()
 	printf("Solving by Jacobi iteration...");
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	g_pSolverJacobi->Solve(vSize, g_pbSRV, g_pxUAV, 150 * uDim);
+	g_pSolverJacobi->Solve(vSize, *g_pbUAVs, g_pxUAV, 150 * uDim);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 	
@@ -166,6 +188,19 @@ int __cdecl main()
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
 	g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 15 * max(uDim / 4, 1));
+	g_pContext->End(pQueryEnd);
+	g_pContext->End(pQueryDisjoint);
+
+	while (S_OK != g_pContext->GetData(pQueryStart, &uStartTime, sizeof(UINT64), 0));
+	while (S_OK != g_pContext->GetData(pQueryEnd, &uEndTime, sizeof(UINT64), 0));
+	while (S_OK != g_pContext->GetData(pQueryDisjoint, &freq, sizeof(D3D11_QUERY_DATA_TIMESTAMP_DISJOINT), 0));
+	fTimeElapse = (uEndTime - uStartTime) / static_cast<double>(freq.Frequency) * 1000.0;
+	printf("done (%.2fms)\n", fTimeElapse);
+
+	printf("Solving by multigrid...");
+	g_pContext->Begin(pQueryDisjoint);
+	g_pContext->End(pQueryStart);
+	g_pSolverMultigrid->Solve(vSize, g_pbUAVs, g_pxUAVs, 120 * uDim, uMips);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 
@@ -192,7 +227,7 @@ int __cdecl main()
 
 		// Verify that if Compute Shader has done right
 		printf("Print result (by Jacobi iteration)...\n");
-		auto uPitch = max(vSize.x, 32);
+		auto uPitch = max(vSize.x, 4);
 		for (auto i = 0u; i < vSize.z; ++i)
 		{
 			for (auto j = 0u; j < vSize.y; ++j)
@@ -223,7 +258,38 @@ int __cdecl main()
 
 		// Verify that if Compute Shader has done right
 		printf("Print result (by conjugate gradient)...\n");
-		auto uPitch = max(vSize.x, 32);
+		auto uPitch = max(vSize.x, 4);
+		for (auto i = 0u; i < vSize.z; ++i)
+		{
+			for (auto j = 0u; j < vSize.y; ++j)
+			{
+				for (auto k = 0u; k < vSize.x; ++k)
+				{
+					printf("%.4f ", p[i * uPitch * vSize.y + j * uPitch + k]);
+				}
+				printf("\n");
+			}
+			printf("\n");
+		}
+
+		g_pContext->Unmap(pRead, 0);
+
+		SAFE_RELEASE(pRead);
+	}
+
+	{
+		ID3D11Texture3D* pRead = CreateAndCopyToDebugTex(g_pDevice, g_pContext, g_px_MG);
+		D3D11_MAPPED_SUBRESOURCE MappedResource;
+		float *p;
+		g_pContext->Map(pRead, 0, D3D11_MAP_READ, 0, &MappedResource);
+
+		// Set a break point here and put down the expression "p, 1024" in your watch window to see what has been written out by our CS
+		// This is also a common trick to debug CS programs.
+		p = (float*)MappedResource.pData;
+
+		// Verify that if Compute Shader has done right
+		printf("Print result (by multigrid)...\n");
+		auto uPitch = max(vSize.x, 4);
 		for (auto i = 0u; i < vSize.z; ++i)
 		{
 			for (auto j = 0u; j < vSize.y; ++j)
@@ -243,11 +309,16 @@ int __cdecl main()
 	}
 
 	printf("Cleaning up...\n");
+	for (auto i = 0u; i < uMips && g_pxUAVs; ++i) SAFE_RELEASE(g_pxUAVs[i]);
+	SAFE_RELEASE(g_px_MG);
+	SAFE_RELEASE(g_pSolverMultigrid);
+
 	SAFE_RELEASE(g_pxUAV_CG);
 	SAFE_RELEASE(g_px_CG);
 	SAFE_RELEASE(g_pSolverConjGrad);
 
 	SAFE_RELEASE(g_pxUAV);
+	for (auto i = 0u; i < uMips && g_pbUAVs; ++i) SAFE_RELEASE(g_pbUAVs[i]);
 	SAFE_RELEASE(g_pbSRV);
 	SAFE_RELEASE(g_pb);
 	SAFE_RELEASE(g_px);
@@ -256,6 +327,7 @@ int __cdecl main()
 	SAFE_RELEASE(g_pContext);
 	SAFE_RELEASE(g_pDevice);
 
+	if (g_pbUAVs) delete[] g_pbUAVs;
 	if (b) delete[] b;
 
 	return 0;

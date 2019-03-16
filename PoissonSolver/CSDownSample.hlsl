@@ -2,7 +2,7 @@
 // By XU, Tianchen
 //--------------------------------------------------------------------------------------
 
-Texture3D<float>	x;
+RWTexture3D<float>	x;
 RWTexture3D<float>	y;
 
 groupshared float	g_Block[2][2][2];

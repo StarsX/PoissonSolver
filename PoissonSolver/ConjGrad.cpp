@@ -146,20 +146,13 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 	else
 	{
 		V_RETURN(D3DReadFileToBlob(L"CSInit.cso", &shaderBuffer));
-		hr = m_pd3dDevice->CreateComputeShader(
-			shaderBuffer->GetBufferPointer(),
-			shaderBuffer->GetBufferSize(),
-			nullptr, &m_pInitShader
-			);
+		hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+			shaderBuffer->GetBufferSize(), nullptr, &m_pInitShader);
 		if (SUCCEEDED(hr))
 		{
 			ID3D11ShaderReflection *pReflector = nullptr;
-			hr = D3DReflect(
-				shaderBuffer->GetBufferPointer(),
-				shaderBuffer->GetBufferSize(),
-				IID_ID3D11ShaderReflection,
-				(void**)&pReflector
-				);
+			hr = D3DReflect(shaderBuffer->GetBufferPointer(), shaderBuffer->GetBufferSize(),
+				IID_ID3D11ShaderReflection, (void**)&pReflector);
 			if (SUCCEEDED(hr))
 			{
 				h = pReflector->GetResourceBindingDescByName("b", &desc);
@@ -187,20 +180,13 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSxUpdate.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pShader
-		);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pShader);
 	if (SUCCEEDED(hr))
 	{
 		ID3D11ShaderReflection *pReflector = nullptr;
-		hr = D3DReflect(
-			shaderBuffer->GetBufferPointer(),
-			shaderBuffer->GetBufferSize(),
-			IID_ID3D11ShaderReflection,
-			(void**)&pReflector
-			);
+		hr = D3DReflect(shaderBuffer->GetBufferPointer(), shaderBuffer->GetBufferSize(),
+			IID_ID3D11ShaderReflection, (void**)&pReflector);
 		if (SUCCEEDED(hr))
 		{
 			h = pReflector->GetResourceBindingDescByName("p_RO", &desc);
@@ -233,20 +219,13 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 
 	shaderBuffer = nullptr;
 	V_RETURN(D3DReadFileToBlob(L"CSpUpdate.cso", &shaderBuffer));
-	hr = m_pd3dDevice->CreateComputeShader(
-		shaderBuffer->GetBufferPointer(),
-		shaderBuffer->GetBufferSize(),
-		nullptr, &m_pUpdateShader
-		);
+	hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+		shaderBuffer->GetBufferSize(), nullptr, &m_pUpdateShader);
 	if (SUCCEEDED(hr))
 	{
 		ID3D11ShaderReflection *pReflector = nullptr;
-		hr = D3DReflect(
-			shaderBuffer->GetBufferPointer(),
-			shaderBuffer->GetBufferSize(),
-			IID_ID3D11ShaderReflection,
-			(void**)&pReflector
-			);
+		hr = D3DReflect(shaderBuffer->GetBufferPointer(), shaderBuffer->GetBufferSize(),
+			IID_ID3D11ShaderReflection, (void**)&pReflector);
 		if (SUCCEEDED(hr))
 		{
 			h = pReflector->GetResourceBindingDescByName("r_RO", &desc);
@@ -276,20 +255,13 @@ HRESULT ConjGrad::initShaders(ID3D11ComputeShader *const pInitShader, ID3D11Comp
 	}
 	else {
 		V_RETURN(D3DReadFileToBlob(L"CSpAp.cso", &shaderBuffer));
-		hr = m_pd3dDevice->CreateComputeShader(
-			shaderBuffer->GetBufferPointer(),
-			shaderBuffer->GetBufferSize(),
-			nullptr, &m_pApShader
-			);
+		hr = m_pd3dDevice->CreateComputeShader(shaderBuffer->GetBufferPointer(),
+			shaderBuffer->GetBufferSize(), nullptr, &m_pApShader);
 		if (SUCCEEDED(hr))
 		{
 			ID3D11ShaderReflection *pReflector = nullptr;
-			hr = D3DReflect(
-				shaderBuffer->GetBufferPointer(),
-				shaderBuffer->GetBufferSize(),
-				IID_ID3D11ShaderReflection,
-				(void**)&pReflector
-				);
+			hr = D3DReflect(shaderBuffer->GetBufferPointer(), shaderBuffer->GetBufferSize(),
+				IID_ID3D11ShaderReflection, (void**)&pReflector);
 			if (SUCCEEDED(hr))
 			{
 				h = pReflector->GetResourceBindingDescByName("x", &desc);

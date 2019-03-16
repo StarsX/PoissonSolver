@@ -17,8 +17,9 @@ HRESULT CreateStructuredBuffer(_In_ ID3D11Device* pDevice, _In_ UINT uElementSiz
 	_In_reads_(uElementSize*uCount) void* pInitData, _Outptr_ ID3D11Buffer** ppBufOut);
 HRESULT CreateRawBuffer(_In_ ID3D11Device* pDevice, _In_ UINT uSize, _In_reads_(uSize) void* pInitData, _Outptr_ ID3D11Buffer** ppBufOut);
 HRESULT CreateTexture3D(_In_ ID3D11Device* pDevice, _In_ DXGI_FORMAT eFormat, _In_ DirectX::XMUINT3 vSize,
-	_In_ void* pInitData, _Outptr_ ID3D11Texture3D** ppTexOut);
+	_In_ void* pInitData, _Outptr_ ID3D11Texture3D** ppTexOut, _In_ uint32_t uMips = 1);
 HRESULT CreateBufferSRV(_In_ ID3D11Device* pDevice, _In_ ID3D11Buffer* pBuffer, _Outptr_ ID3D11ShaderResourceView** ppSRVOut, DXGI_FORMAT eFormat = DXGI_FORMAT_UNKNOWN);
-HRESULT CreateTexture3DSRV(_In_ ID3D11Device* pDevice, _In_ ID3D11Texture3D* pTex, _Outptr_ ID3D11ShaderResourceView** ppSRVOut);
+HRESULT CreateTexture3DSRV(_In_ ID3D11Device* pDevice, _In_ ID3D11Texture3D* pTex, _Outptr_ ID3D11ShaderResourceView** ppSRVOut,
+	_In_ uint32_t uMDMip = 0, _In_ uint32_t uMips = 1);
 HRESULT CreateBufferUAV(_In_ ID3D11Device* pDevice, _In_ ID3D11Buffer* pBuffer, _Outptr_ ID3D11UnorderedAccessView** pUAVOut, DXGI_FORMAT eFormat = DXGI_FORMAT_UNKNOWN);
-HRESULT CreateTexture3DUAV(_In_ ID3D11Device* pDevice, _In_ ID3D11Texture3D* pTex, _Outptr_ ID3D11UnorderedAccessView** ppUAVOut);
+HRESULT CreateTexture3DUAV(_In_ ID3D11Device* pDevice, _In_ ID3D11Texture3D* pTex, _Outptr_ ID3D11UnorderedAccessView** ppUAVOut, _In_ uint32_t uMipSlice = 0);
