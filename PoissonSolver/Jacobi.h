@@ -22,7 +22,7 @@ public:
 	virtual ~Jacobi();
 	HRESULT Init();
 
-	void Solve(const DirectX::XMUINT3 &vSize, ID3D11UnorderedAccessView *const pSrc, ID3D11UnorderedAccessView *const pDst, uint32_t uNumIt);
+	void Solve(const DirectX::XMUINT3 &vSize, ID3D11ShaderResourceView *const pSrc, ID3D11UnorderedAccessView *const pDst, uint32_t uNumIt);
 	void AddRef();
 	void Release();
 
@@ -31,8 +31,8 @@ protected:
 	void jacobi(const DirectX::XMUINT3 &vSize, ID3D11UnorderedAccessView *const pDst);
 
 	uint32_t			m_uRefCount;
-	uint32_t			m_uUAVSlot_b;
-	uint32_t			m_uUAVSlot_x;
+	uint32_t			m_uSRVSlot;
+	uint32_t			m_uUAVSlot;
 
 	ID3D11ComputeShader	*m_pShader;
 

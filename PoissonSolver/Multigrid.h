@@ -10,8 +10,9 @@ public:
 	virtual ~Multigrid();
 	HRESULT Init();
 
-	void Solve(const DirectX::XMUINT3 &vSize, ID3D11UnorderedAccessView* const* const ppSrc,
-		ID3D11UnorderedAccessView* const* const ppDst, uint32_t uNumIt, uint32_t uMips);
+	void Solve(const DirectX::XMUINT3 &vSize, ID3D11ShaderResourceView* const* const ppSrcSRVs,
+		ID3D11UnorderedAccessView* const* const ppSrcUAVs, ID3D11UnorderedAccessView* const* const ppDst,
+		uint32_t uNumIt, uint32_t uMips);
 
 	static HRESULT CreateSolver(ID3D11DeviceContext *const pDeviceContext, Multigrid **ppSolver);
 

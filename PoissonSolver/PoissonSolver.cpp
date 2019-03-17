@@ -66,8 +66,8 @@ ID3D11DeviceContext*        g_pContext = nullptr;
 Jacobi*						g_pSolverJacobi = nullptr;
 ID3D11Texture3D*			g_px = nullptr;
 ID3D11Texture3D*			g_pb = nullptr;
-ID3D11ShaderResourceView*	g_pbSRV = nullptr;
-ID3D11UnorderedAccessView**	g_pbUAVs = nullptr;
+ID3D11ShaderResourceView**	g_ppbSRVs = nullptr;
+ID3D11UnorderedAccessView**	g_ppbUAVs = nullptr;
 ID3D11UnorderedAccessView*  g_pxUAV = nullptr;
 
 ConjGrad*					g_pSolverConjGrad = nullptr;
@@ -76,7 +76,7 @@ ID3D11UnorderedAccessView*  g_pxUAV_CG = nullptr;
 
 Multigrid*					g_pSolverMultigrid = nullptr;
 ID3D11Texture3D*			g_px_MG = nullptr;
-ID3D11UnorderedAccessView** g_pxUAVs = nullptr;
+ID3D11UnorderedAccessView** g_ppxUAVs = nullptr;
 
 //--------------------------------------------------------------------------------------
 // Entry point to the program
@@ -136,15 +136,16 @@ int __cdecl main()
 	printf("done\n");
 
 	printf("Creating buffer views...");
-	CreateTexture3DSRV(g_pDevice, g_pb, &g_pbSRV);
 	CreateTexture3DUAV(g_pDevice, g_px, &g_pxUAV);
 	CreateTexture3DUAV(g_pDevice, g_px_CG, &g_pxUAV_CG);
-	g_pbUAVs = new ID3D11UnorderedAccessView*[uMips];
-	g_pxUAVs = new ID3D11UnorderedAccessView*[uMips];
+	g_ppbSRVs = new ID3D11ShaderResourceView*[uMips];
+	g_ppbUAVs = new ID3D11UnorderedAccessView*[uMips];
+	g_ppxUAVs = new ID3D11UnorderedAccessView*[uMips];
 	for (auto i = 0u; i < uMips; ++i)
 	{
-		CreateTexture3DUAV(g_pDevice, g_pb, &g_pbUAVs[i], i);
-		CreateTexture3DUAV(g_pDevice, g_px_MG, &g_pxUAVs[i], i);
+		CreateTexture3DSRV(g_pDevice, g_pb, &g_ppbSRVs[i], i);
+		CreateTexture3DUAV(g_pDevice, g_pb, &g_ppbUAVs[i], i);
+		CreateTexture3DUAV(g_pDevice, g_px_MG, &g_ppxUAVs[i], i);
 	}
 
 #if defined(_DEBUG) || defined(PROFILE)
@@ -172,7 +173,7 @@ int __cdecl main()
 	printf("Solving by Jacobi iteration...");
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	g_pSolverJacobi->Solve(vSize, *g_pbUAVs, g_pxUAV, 150 * uDim);
+	g_pSolverJacobi->Solve(vSize, *g_ppbSRVs, g_pxUAV, 150 * uDim);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 	
@@ -187,7 +188,7 @@ int __cdecl main()
 	printf("Solving by conjugate gradient...");
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	g_pSolverConjGrad->Solve(vSize, g_pbSRV, g_pxUAV_CG, 15 * max(uDim / 4, 1));
+	g_pSolverConjGrad->Solve(vSize, *g_ppbSRVs, g_pxUAV_CG, 15 * max(uDim / 4, 1));
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 
@@ -200,7 +201,7 @@ int __cdecl main()
 	printf("Solving by multigrid...");
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	g_pSolverMultigrid->Solve(vSize, g_pbUAVs, g_pxUAVs, 120 * uDim, uMips);
+	g_pSolverMultigrid->Solve(vSize, g_ppbSRVs, g_ppbUAVs, g_ppxUAVs, 120 * uDim, uMips);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 
@@ -309,7 +310,7 @@ int __cdecl main()
 	}
 
 	printf("Cleaning up...\n");
-	for (auto i = 0u; i < uMips && g_pxUAVs; ++i) SAFE_RELEASE(g_pxUAVs[i]);
+	for (auto i = 0u; i < uMips && g_ppxUAVs; ++i) SAFE_RELEASE(g_ppxUAVs[i]);
 	SAFE_RELEASE(g_px_MG);
 	SAFE_RELEASE(g_pSolverMultigrid);
 
@@ -318,8 +319,8 @@ int __cdecl main()
 	SAFE_RELEASE(g_pSolverConjGrad);
 
 	SAFE_RELEASE(g_pxUAV);
-	for (auto i = 0u; i < uMips && g_pbUAVs; ++i) SAFE_RELEASE(g_pbUAVs[i]);
-	SAFE_RELEASE(g_pbSRV);
+	for (auto i = 0u; i < uMips && g_ppbUAVs; ++i) SAFE_RELEASE(g_ppbUAVs[i]);
+	for (auto i = 0u; i < uMips && g_ppbSRVs; ++i) SAFE_RELEASE(g_ppbSRVs[i]);
 	SAFE_RELEASE(g_pb);
 	SAFE_RELEASE(g_px);
 	SAFE_RELEASE(g_pSolverJacobi);
@@ -327,7 +328,8 @@ int __cdecl main()
 	SAFE_RELEASE(g_pContext);
 	SAFE_RELEASE(g_pDevice);
 
-	if (g_pbUAVs) delete[] g_pbUAVs;
+	if (g_ppbUAVs) delete[] g_ppbUAVs;
+	if (g_ppbSRVs) delete[] g_ppbSRVs;
 	if (b) delete[] b;
 
 	return 0;

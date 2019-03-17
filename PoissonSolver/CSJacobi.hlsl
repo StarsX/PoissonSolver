@@ -4,7 +4,7 @@
 
 #include "SharedConst.h"
 
-RWTexture3D<float>	b;
+Texture3D<float>	b;
 RWTexture3D<float>	x;
 
 //--------------------------------------------------------------------------------------

@@ -85,8 +85,9 @@ HRESULT Multigrid::Init()
 	return hr;
 }
 
-void Multigrid::Solve(const XMUINT3 & vSize, ID3D11UnorderedAccessView* const* const ppSrc,
-	ID3D11UnorderedAccessView* const* const ppDst, uint32_t uNumIt, uint32_t uMips)
+void Multigrid::Solve(const XMUINT3 & vSize, ID3D11ShaderResourceView* const* const ppSrcSRVs,
+	ID3D11UnorderedAccessView* const* const ppSrcUAVs, ID3D11UnorderedAccessView* const* const ppDst,
+	uint32_t uNumIt, uint32_t uMips)
 {
 	const auto UAVInitialCounts = 0u;
 
@@ -94,8 +95,8 @@ void Multigrid::Solve(const XMUINT3 & vSize, ID3D11UnorderedAccessView* const* c
 	for (auto i = 0u; i < uMips - 1; ++i)
 	{
 		// Setup
-		m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_xdown, 1, &ppSrc[i], &UAVInitialCounts);
-		m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_ydown, 1, &ppSrc[i + 1], &UAVInitialCounts);
+		m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_xdown, 1, &ppSrcUAVs[i], &UAVInitialCounts);
+		m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_ydown, 1, &ppSrcUAVs[i + 1], &UAVInitialCounts);
 
 		m_pd3dContext->CSSetShader(m_pDownSmpShader, nullptr, 0);
 		m_pd3dContext->Dispatch(vSize.x / 2, vSize.y / 2, vSize.z / 2);
@@ -104,7 +105,7 @@ void Multigrid::Solve(const XMUINT3 & vSize, ID3D11UnorderedAccessView* const* c
 	for (int i = uMips - 1; i > 0; --i)
 	{
 		// Setup b
-		m_pd3dContext->CSSetUnorderedAccessViews(m_uUAVSlot_b, 1, &ppSrc[i], &UAVInitialCounts);
+		m_pd3dContext->CSSetShaderResources(m_uSRVSlot, 1, &ppSrcSRVs[i]);
 
 		// Jacobi iterations
 		for (auto j = 0u; j < uNumIt >> uMips; ++j) jacobi(vSize, ppDst[i]);
@@ -116,5 +117,5 @@ void Multigrid::Solve(const XMUINT3 & vSize, ID3D11UnorderedAccessView* const* c
 		m_pd3dContext->Dispatch(vSize.x / THREAD_GROUP_SIZE, vSize.y / THREAD_GROUP_SIZE, vSize.z / THREAD_GROUP_SIZE);
 	}
 
-	Jacobi::Solve(vSize, *ppSrc, *ppDst, uNumIt);
+	Jacobi::Solve(vSize, *ppSrcSRVs, *ppDst, uNumIt);
 }
