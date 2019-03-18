@@ -11,8 +11,8 @@ public:
 	HRESULT Init();
 
 	void Solve(const DirectX::XMUINT3 &vSize, ID3D11ShaderResourceView* const* const ppSrcSRVs,
-		ID3D11UnorderedAccessView* const* const ppSrcUAVs, ID3D11UnorderedAccessView* const* const ppDst,
-		uint32_t uNumIt, uint32_t uMips);
+		ID3D11ShaderResourceView* const* const ppDstSRVs, ID3D11UnorderedAccessView* const* const ppSrcUAVs,
+		ID3D11UnorderedAccessView* const* const ppDstUAVs, uint32_t uNumIt, uint32_t uMips);
 
 	static HRESULT CreateSolver(ID3D11DeviceContext *const pDeviceContext, Multigrid **ppSolver);
 

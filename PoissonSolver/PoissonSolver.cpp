@@ -76,6 +76,7 @@ ID3D11UnorderedAccessView*  g_pxUAV_CG = nullptr;
 
 Multigrid*					g_pSolverMultigrid = nullptr;
 ID3D11Texture3D*			g_px_MG = nullptr;
+ID3D11ShaderResourceView**	g_ppxSRVs = nullptr;
 ID3D11UnorderedAccessView** g_ppxUAVs = nullptr;
 
 //--------------------------------------------------------------------------------------
@@ -139,11 +140,13 @@ int __cdecl main()
 	CreateTexture3DUAV(g_pDevice, g_px, &g_pxUAV);
 	CreateTexture3DUAV(g_pDevice, g_px_CG, &g_pxUAV_CG);
 	g_ppbSRVs = new ID3D11ShaderResourceView*[uMips];
+	g_ppxSRVs = new ID3D11ShaderResourceView*[uMips];
 	g_ppbUAVs = new ID3D11UnorderedAccessView*[uMips];
 	g_ppxUAVs = new ID3D11UnorderedAccessView*[uMips];
 	for (auto i = 0u; i < uMips; ++i)
 	{
 		CreateTexture3DSRV(g_pDevice, g_pb, &g_ppbSRVs[i], i);
+		CreateTexture3DSRV(g_pDevice, g_px, &g_ppxSRVs[i], i);
 		CreateTexture3DUAV(g_pDevice, g_pb, &g_ppbUAVs[i], i);
 		CreateTexture3DUAV(g_pDevice, g_px_MG, &g_ppxUAVs[i], i);
 	}
@@ -201,7 +204,7 @@ int __cdecl main()
 	printf("Solving by multigrid...");
 	g_pContext->Begin(pQueryDisjoint);
 	g_pContext->End(pQueryStart);
-	g_pSolverMultigrid->Solve(vSize, g_ppbSRVs, g_ppbUAVs, g_ppxUAVs, 120 * uDim, uMips);
+	g_pSolverMultigrid->Solve(vSize, g_ppbSRVs, g_ppxSRVs, g_ppbUAVs, g_ppxUAVs, 120 * uDim, uMips);
 	g_pContext->End(pQueryEnd);
 	g_pContext->End(pQueryDisjoint);
 
